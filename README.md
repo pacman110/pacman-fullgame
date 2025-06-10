@@ -7,7 +7,6 @@ O objetivo é recriar a mecânica básica do jogo, com movimentação do persona
 
 1. ✅ Certifique-se de ter a biblioteca **SFML** instalada no seu sistema.  
 2. 🛠️ Compile o projeto usando seu compilador C++ preferido.  
-3. ▶️ Execute o binário gerado para iniciar o jogo.
 
 ## 📋 Requisitos
 
