@@ -1,4 +1,4 @@
-# 🟡 Pacman C++ com SFML 👾
+# 👻 Pacman C++ com SFML 👾
 
 Este é um projeto em desenvolvimento de um jogo inspirado no clássico **Pacman**, desenvolvido em C++ utilizando a biblioteca gráfica **SFML**.  
 O objetivo é recriar a mecânica básica do jogo, com movimentação do personagem principal e interação simples, mantendo uma estrutura limpa e extensível para futuras melhorias.
@@ -16,4 +16,4 @@ O objetivo é recriar a mecânica básica do jogo, com movimentação do persona
 
 ---
 
-Divirta-se e contribua com sugestões! 🚀
+Divirta-se caçando fantasmas 👻 e coletando pontos ⭐! 🚀
