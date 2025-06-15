@@ -1,0 +1,15 @@
+
+Para quem usa Windows, existem várias versões diferentes da SFML para download porque a versão do compilador instalada na sua máquina deve bater 100% com a versão usada na geração dos pacotes da SFML.
+
+Para quem tem o MinGW instalado e costuma compilar pela linha de comando no terminal (ou pelo Code::Blocks, por exemplo), a versão do MinGW compatível com a SFML 2.6.1 pode ser obtida dos links abaixo:
+
+WinLibs MSVCRT 13.1.0 (32-bit)
+https://github.com/brechtsanders/winlibs_mingw/releases/download/13.1.0-16.0.5-11.0.0-msvcrt-r5/winlibs-i686-posix-dwarf-gcc-13.1.0-mingw-w64msvcrt-11.0.0-r5.7z
+
+WinLibs MSVCRT 13.1.0 (64-bit)
+https://github.com/brechtsanders/winlibs_mingw/releases/download/13.1.0-16.0.5-11.0.0-msvcrt-r5/winlibs-x86_64-posix-seh-gcc-13.1.0-mingw-w64msvcrt-11.0.0-r5.7z
+
+Usar esta versão resolve problemas de compatibilidade, como erros do tipo "Não foi possível localizar o ponto de entrada do procedimento ... na biblioteca de vínculo dinâmico sfml..."
+
+Para quem ainda não tem o MinGW instalado, aqui tem um bom tutorial de instalação:
+https://terminalroot.com.br/2022/12/como-instalar-gcc-gpp-mingw-no-windows.html
