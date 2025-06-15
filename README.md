@@ -1,18 +1,63 @@
-# 👻 Pacman C++ com SFML 👾
 
-Este é um projeto em desenvolvimento de um jogo inspirado no clássico **Pacman**, desenvolvido em C++ utilizando a biblioteca gráfica **SFML**.  
-O objetivo é recriar a mecânica básica do jogo, com movimentação do personagem principal e interação simples.
+# 🧙‍♂️⚡ Pac-Wizard: A Caçada em Hogwarts [EM DESENVOLVIMENTO]🎮
 
-## ▶️ Como executar
-
-1. ✅ Certifique-se de ter a biblioteca **SFML** instalada no seu sistema.  
-2. 🛠️ Compile o projeto usando seu compilador C++ preferido.  
-
-## 📋 Requisitos
-
-- 🖥️ C++11 ou superior  
-- 🎨 SFML 2.5 ou superior  
+Projeto de jogo inspirado no clássico **Pac-Man**, ambientado no mundo mágico de **Harry Potter**. Desenvolvido em **C++** com a biblioteca gráfica **SFML**, o jogo traz Harry Potter voando por um labirinto de Hogwarts, fugindo de Dementadores e coletando pontos mágicos!
 
 ---
 
-Divirta-se caçando fantasmas 👻 e coletando pontos ⭐! 🚀
+## ▶️ Como Executar
+
+### 💻 Requisitos
+
+- **C++11** ou superior
+- **SFML 2.5** ou superior
+- Sistema operacional: Windows / Linux
+
+---
+
+### 🚀 Compilação no Linux
+
+1. Instale a SFML (se ainda não tiver):
+
+```bash
+sudo apt-get install libsfml-dev
+```
+
+2. Compile o projeto:
+
+```bash
+g++ main.cpp -o PacWizard -lsfml-graphics -lsfml-window -lsfml-system
+```
+
+3. Execute:
+
+```bash
+./PacWizard
+```
+
+---
+
+### 🪟 Compilação no Windows (MinGW)
+
+1. Baixe e instale a **SFML 2.5+** compatível com MinGW.
+2. Compile:
+
+```bash
+g++ main.cpp -o PacWizard.exe -lsfml-graphics -lsfml-window -lsfml-system
+```
+
+3. Execute `PacWizard.exe` na pasta de saída.
+
+---
+
+## 📋 Funcionalidades
+
+- ✅ Controle do personagem **Harry Potter** voando pela tela.
+- ✅ Labirinto de Hogwarts no estilo Pac-Man.
+- ✅ Inimigos Dementadores (substituindo os fantasmas clássicos).
+- ✅ Colete pontos mágicos.
+
+---
+## 🪄 Em desenvolvimento por fãs do universo Harry Potter e games clássicos de arcade.
+
+## ✨ Divirta-se caçando Dementadores em Hogwarts! ✨🧙‍♂️👻
