@@ -44,8 +44,8 @@ char mapa[31][29] = {
     "1111111111111111111111111111",
 };
 
-int posx = 9;       // posicao do PacMan
-int posy = 7;
+int posx = 1;       // posicao do PacMan
+int posy = 29;
 
 int main() {
     // cria a janela
@@ -57,15 +57,23 @@ int main() {
     rectangle.setOutlineThickness(-5);
     rectangle.setOutlineColor(sf::Color(50, 50, 50));
 
-    // // sprite do PacMan
-    // sf::Texture texture;
-    // if (!texture.loadFromFile("pacman.png")) {
-    //     std::cout << "Erro lendo imagem pacman.png\n";
-    //     return 0;
-    // }
-    // sf::Sprite sprite;
-    // sprite.setTexture(texture);
+     // // sprite do PacMan
+    sf::Texture texturePac;
+    if (!texturePac.loadFromFile("resources/hp.png")) {
+       std::cout << "Erro lendo imagem hp.png\n";
+        return 0;
+    }
+    sf::Sprite pac; // Criando objeto spitepac
+    pac.setTexture(texturePac); // atribuindo a textura
+    sf::Vector2u tamanhoPac = texturePac.getSize(); // Pega o taamnho real da imagem (Textura do pacman)
+    pac.setOrigin(tamanhoPac.x / 2.0f, tamanhoPac.y / 2.0f); // origem = centro // Divide o tamanho da celula para ir para o centro (f = float)
+    // Redimensionar o sprite para caber na célula
+    float escalaX = SIZE / static_cast<float>(tamanhoPac.x);
+    float escalaY = SIZE / static_cast<float>(tamanhoPac.y);
+    pac.setScale(escalaX, escalaY);
     
+
+    bool moveesquerda = false;
     // Sprite da Pedra (Frutinha) -Textura
     sf::Texture texturaPedra; // Criando o objeto textura da pedra
     if (!texturaPedra.loadFromFile("resources/pedra.png")) {
@@ -88,16 +96,20 @@ int main() {
                 window.close();
 
             // tecla pressionada
-            // if (event.type == sf::Event::KeyPressed) {
-            //     if (event.key.code == sf::Keyboard::Left)
-            //         posx--;   // left key: move o PacMan para esquerda
-            //     else if (event.key.code == sf::Keyboard::Right)
-            //         posx++;   // right key: move o PacMan para direita
-            //     else if (event.key.code == sf::Keyboard::Up)
-            //         posy--;   // up key: move o PacMan para cima
-            //     else if (event.key.code == sf::Keyboard::Down)
-            //         posy++;   // down key: move o PacMan para baixo
-            // }
+            if (event.type == sf::Event::KeyPressed) {
+               if (event.key.code == sf::Keyboard::Left && mapa [posy][posx-1] != '1'){
+                  posx--;   // left key: move o PacMan para esquerda
+                  moveesquerda = true;
+               }
+               else if (event.key.code == sf::Keyboard::Right && mapa [posy] [posx+1] !='1'){ 
+                  posx++;   // right key: move o PacMan para direita
+                  moveesquerda = false;
+               }
+               else if (event.key.code == sf::Keyboard::Up)
+                  posy--;   // up key: move o PacMan para cima
+               else if (event.key.code == sf::Keyboard::Down)
+                  posy++;   // down key: move o PacMan para baixo
+            }
         }
 
         // limpa a janela com a cor preta
@@ -118,9 +130,9 @@ int main() {
                     window.draw(pedra);
                 }
             }
-        // desenha PacMan
-        // sprite.setPosition(posx*SIZE,posy*SIZE);
-        // window.draw(sprite);
+        // desenha o PacMan na posição atual
+        pac.setPosition(posx * SIZE + SIZE / 2.0f, posy * SIZE + SIZE / 2.0f);
+        window.draw(pac);
 
         // termina e desenha o frame corrente
         window.display();
