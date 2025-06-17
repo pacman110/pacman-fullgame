@@ -66,8 +66,8 @@ int main() {
     sf::Sprite pac; // Criando objeto spitepac
     pac.setTexture(texturePac); // atribuindo a textura
     sf::Vector2u tamanhoPac = texturePac.getSize(); // Pega o taamnho real da imagem (Textura do pacman)
-    pac.setOrigin(tamanhoPac.x / 2.0f, tamanhoPac.y / 2.0f); // origem = centro // Divide o tamanho da celula para ir para o centro (f = float)
-    // Redimensionar o sprite para caber na célula
+    pac.setOrigin(tamanhoPac.x / 2.5f, tamanhoPac.y / 2.5f); // origem = centro // Divide o tamanho da celula para ir para o centro (f = float)
+    // Redimensionar o sprite para caber na célula (vou retirar essa parte - Tais)
     float escalaX = SIZE / static_cast<float>(tamanhoPac.x);
     float escalaY = SIZE / static_cast<float>(tamanhoPac.y);
     pac.setScale(escalaX, escalaY);
