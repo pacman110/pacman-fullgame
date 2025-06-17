@@ -76,7 +76,24 @@ int main() {
     sf::Sprite pedra; // Criando objeto spitepedra
     pedra.setTexture(texturaPedra); // atribuindo a textura
     pedra.setOrigin(tamanhoTextura.x / 2.0f, tamanhoTextura.y / 2.0f); // origem = centro // Divide o tamanho da celula para ir para o centro (f = float)
+    pedra.setScale(0.8f, 0.8f);
 
+    // Carrega textura do fundo único
+    sf::Texture texturaFundo;  // Criando o objeto textura do fundo do jogo
+    if (!texturaFundo.loadFromFile("resources/tiles/fundo.png")) {
+        std::cout << "Erro lendo imagem fundo.png\n";
+        return 0;
+    }
+    sf::Sprite spriteFundo; // Criando objeto sprite fundo
+    spriteFundo.setTexture(texturaFundo);
+
+    sf::Texture texturaParede;  // Criando o objeto textura da parede do jogo
+    if (!texturaParede.loadFromFile("resources/tiles/parede.png")) {
+        std::cout << "Erro lendo imagem parede.png\n";
+        return 0;
+    }
+    sf::Sprite spriteParede; // Criando objeto sprite fundo
+    spriteParede.setTexture(texturaParede);
     // executa o programa enquanto a janela está aberta
     while (window.isOpen()) {
 
@@ -100,8 +117,12 @@ int main() {
             // }
         }
 
-        // limpa a janela com a cor preta
-        window.clear(sf::Color::Black);
+       // limpa a janela com a cor preta
+window.clear(sf::Color::Black);
+
+// desenha o fundo da tela (imagem única)
+window.draw(spriteFundo);
+
 
         // desenhar tudo aqui...
 
@@ -109,8 +130,8 @@ int main() {
         for(int i=0;i<31;i++)
             for(int j=0;j<29;j++){
                 if (mapa[i][j]=='1') {
-                    rectangle.setPosition(j*SIZE, i*SIZE);
-                    window.draw(rectangle);
+                   spriteParede.setPosition(j*SIZE, i*SIZE);
+                    window.draw(spriteParede);
                 }
                 else if(mapa[i][j] == '2'){
                     // Pega a posição da coluna e da linha, ajusta para o centro
