@@ -47,6 +47,10 @@ char mapa[31][29] = {
 int posx = 1;       // posicao do PacMan
 int posy = 29;
 
+// posicao ghost
+int ghostX = 13;
+int ghostY = 15; 
+
 int main() {
     // cria a janela
     sf::RenderWindow window(sf::VideoMode(980, 1085), "Potter-Man");
@@ -67,13 +71,12 @@ int main() {
     pac.setTexture(texturePac); // atribuindo a textura
     sf::Vector2u tamanhoPac = texturePac.getSize(); // Pega o taamnho real da imagem (Textura do pacman)
     pac.setOrigin(tamanhoPac.x / 2.5f, tamanhoPac.y / 2.5f); // origem = centro // Divide o tamanho da celula para ir para o centro (f = float)
-    // Redimensionar o sprite para caber na célula (vou retirar essa parte - Tais)
-    float escalaX = SIZE / static_cast<float>(tamanhoPac.x);
-    float escalaY = SIZE / static_cast<float>(tamanhoPac.y);
-    pac.setScale(escalaX, escalaY);
+    // Tamanho do pacman
+    pac.setScale(1.5f,1.5f);
     
 
     bool moveesquerda = false;
+
     // Sprite da Pedra (Frutinha) -Textura
     sf::Texture texturaPedra; // Criando o objeto textura da pedra
     if (!texturaPedra.loadFromFile("resources/pedra.png")) {
@@ -85,6 +88,59 @@ int main() {
     pedra.setTexture(texturaPedra); // atribuindo a textura
     pedra.setOrigin(tamanhoTextura.x / 2.0f, tamanhoTextura.y / 2.0f); // origem = centro // Divide o tamanho da celula para ir para o centro (f = float)
     pedra.setScale(0.8f, 0.8f);
+
+     // Sprites dos dementadores (ghost) - Textura
+     //Ghost1
+    sf::Texture texturaGhost1; // ✅ Criando o objeto textura do ghost
+    if (!texturaGhost1.loadFromFile("resources/ghost1.png")) {
+       std::cout << "Erro lendo imagem ghost1.png\n";
+    return 0;
+    }
+    sf::Vector2u tamanhoGhost1 = texturaGhost1.getSize(); // ✅ Pega o tamanho real
+    sf::Sprite ghost1; // ✅ Criando objeto sprite ghost1
+    ghost1.setTexture(texturaGhost1);
+    ghost1.setOrigin(tamanhoGhost1.x / 2.0f, tamanhoGhost1.y / 2.0f);
+    ghost1.setScale(1.3f, 1.3f);
+
+    //Ghost2
+
+    sf::Texture texturaGhost2; // ✅ Criando o objeto textura do ghost
+    if (!texturaGhost2.loadFromFile("resources/ghost2.png")) {
+       std::cout << "Erro lendo imagem ghost2.png\n";
+    return 0;
+    }
+    sf::Vector2u tamanhoGhost2 = texturaGhost2.getSize(); // ✅ Pega o tamanho real
+    sf::Sprite ghost2; // ✅ Criando objeto sprite ghost2
+    ghost2.setTexture(texturaGhost2);
+    ghost2.setOrigin(tamanhoGhost2.x / 2.0f, tamanhoGhost2.y / 2.0f);
+    ghost2.setScale(1.3f, 1.3f);
+    
+    //Ghost3
+
+    sf::Texture texturaGhost3; // ✅ Criando o objeto textura do ghost
+    if (!texturaGhost3.loadFromFile("resources/ghost3.png")) {
+       std::cout << "Erro lendo imagem ghost3.png\n";
+    return 0;
+    }
+    sf::Vector2u tamanhoGhost3 = texturaGhost3.getSize(); // ✅ Pega o tamanho real
+    sf::Sprite ghost3; // ✅ Criando objeto sprite ghost3
+    ghost3.setTexture(texturaGhost3);
+    ghost3.setOrigin(tamanhoGhost3.x / 2.0f, tamanhoGhost3.y / 2.0f);
+    ghost3.setScale(1.3f, 1.3f);
+
+    //Ghost4
+
+    sf::Texture texturaGhost4; // ✅ Criando o objeto textura do ghost
+    if (!texturaGhost4.loadFromFile("resources/ghost4.png")) {
+       std::cout << "Erro lendo imagem ghost4.png\n";
+    return 0;
+    }
+    sf::Vector2u tamanhoGhost4 = texturaGhost4.getSize(); // ✅ Pega o tamanho real
+    sf::Sprite ghost4; // ✅ Criando objeto sprite ghost4
+    ghost4.setTexture(texturaGhost4);
+    ghost4.setOrigin(tamanhoGhost4.x / 2.0f, tamanhoGhost4.y / 2.0f);
+    ghost4.setScale(1.3f, 1.3f);
+
 
     // Carrega textura do fundo único
     sf::Texture texturaFundo;  // Criando o objeto textura do fundo do jogo
@@ -128,6 +184,7 @@ int main() {
                   posy++;   // down key: move o PacMan para baixo
             }
         }
+    }
 
        // limpa a janela com a cor preta
 window.clear(sf::Color::Black);
@@ -152,11 +209,17 @@ window.draw(spriteFundo);
             }
         // desenha o PacMan na posição atual
         pac.setPosition(posx * SIZE + SIZE / 2.0f, posy * SIZE + SIZE / 2.0f);
+        ghost1.setPosition(ghostX * SIZE + SIZE / 2.0f, ghostY * SIZE + SIZE / 2.0f);
+        ghost2.setPosition((ghostX+2) * SIZE + SIZE / 2.0f, (ghostY) * SIZE + SIZE / 2.0f);
+        ghost3.setPosition(ghostX * SIZE + SIZE / 2.0f, (ghostY) * SIZE + SIZE / 2.0f);
+        ghost4.setPosition((ghostX-2) * SIZE + SIZE / 2.0f, (ghostY) * SIZE + SIZE / 2.0f);
         window.draw(pac);
-
+        window.draw(ghost1);
+        window.draw(ghost2);
+        window.draw(ghost3);
+        window.draw(ghost4);
         // termina e desenha o frame corrente
         window.display();
-    }
 
     return 0;
 }
