@@ -53,6 +53,8 @@ int posy = 29;
 int ghostX = 13;
 int ghostY = 15; 
 
+// PROTOTIPO DE FUNCOES
+
 void defineGhost(sf::Sprite &ghost1,  sf::Sprite &ghost2,  sf::Sprite &ghost3,  sf::Sprite &ghost4);
 
 
@@ -98,65 +100,9 @@ int main() {
     sf::Sprite ghost2; // ✅ Criando objeto sprite ghost4
     sf::Sprite ghost3; // ✅ Criando objeto sprite ghost4
     sf::Sprite ghost4; // ✅ Criando objeto sprite ghost4
-   
 
-    /*
-     // Sprites dos dementadores (ghost) - Textura
-     //Ghost1
-    sf::Texture texturaGhost1; // ✅ Criando o objeto textura do ghost
-    if (!texturaGhost1.loadFromFile("resources/ghost1.png")) {
-       std::cout << "Erro lendo imagem ghost1.png\n";
-    return 0;
-    }
-    sf::Vector2u tamanhoGhost1 = texturaGhost1.getSize(); // ✅ Pega o tamanho real
-    sf::Sprite ghost1; // ✅ Criando objeto sprite ghost1
-    ghost1.setTexture(texturaGhost1);
-    ghost1.setOrigin(tamanhoGhost1.x / 2.0f, tamanhoGhost1.y / 2.0f);
-    ghost1.setScale(1.3f, 1.3f);
-
-    //Ghost2
-
-    sf::Texture texturaGhost2; // ✅ Criando o objeto textura do ghost
-    if (!texturaGhost2.loadFromFile("resources/ghost2.png")) {
-       std::cout << "Erro lendo imagem ghost2.png\n";
-    return 0;
-    }
-    sf::Vector2u tamanhoGhost2 = texturaGhost2.getSize(); // ✅ Pega o tamanho real
-    sf::Sprite ghost2; // ✅ Criando objeto sprite ghost2
-    ghost2.setTexture(texturaGhost2);
-    ghost2.setOrigin(tamanhoGhost2.x / 2.0f, tamanhoGhost2.y / 2.0f);
-    ghost2.setScale(1.3f, 1.3f);
-    
-    //Ghost3
-
-    sf::Texture texturaGhost3; // ✅ Criando o objeto textura do ghost
-    if (!texturaGhost3.loadFromFile("resources/ghost3.png")) {
-       std::cout << "Erro lendo imagem ghost3.png\n";
-    return 0;
-    }
-    sf::Vector2u tamanhoGhost3 = texturaGhost3.getSize(); // ✅ Pega o tamanho real
-    sf::Sprite ghost3; // ✅ Criando objeto sprite ghost3
-    ghost3.setTexture(texturaGhost3);
-    ghost3.setOrigin(tamanhoGhost3.x / 2.0f, tamanhoGhost3.y / 2.0f);
-    ghost3.setScale(1.3f, 1.3f);
-
-    //Ghost4
-
-    sf::Texture texturaGhost4; // ✅ Criando o objeto textura do ghost
-    if (!texturaGhost4.loadFromFile("resources/ghost4.png")) {
-       std::cout << "Erro lendo imagem ghost4.png\n";
-    return 0;
-    }
-    sf::Vector2u tamanhoGhost4 = texturaGhost4.getSize(); // ✅ Pega o tamanho real
-    sf::Sprite ghost4; // ✅ Criando objeto sprite ghost4
-    ghost4.setTexture(texturaGhost4);
-    ghost4.setOrigin(tamanhoGhost4.x / 2.0f, tamanhoGhost4.y / 2.0f);
-    ghost4.setScale(1.3f, 1.3f);
-
-*/
-
+    // Funcao para definir o sprite dos dementadores
     defineGhost(ghost1, ghost2, ghost3, ghost4);
-
 
     // Carrega textura do fundo único
     sf::Texture texturaFundo;  // Criando o objeto textura do fundo do jogo
@@ -237,6 +183,7 @@ int main() {
             }
         // desenha o PacMan na posição atual
         pac.setPosition(posx * SIZE + SIZE / 2.0f, posy * SIZE + SIZE / 2.0f);
+        
         ghost1.setPosition(ghostX * SIZE + SIZE / 2.0f, (ghostY-2) * SIZE + SIZE / 2.0f);
         ghost2.setPosition((ghostX-2) * SIZE + SIZE / 2.0f, (ghostY-1) * SIZE + SIZE / 2.0f);
         ghost3.setPosition((ghostX+2) * SIZE + SIZE / 2.0f, (ghostY-1) * SIZE + SIZE / 2.0f);
@@ -259,22 +206,23 @@ int main() {
 
 void defineGhost( sf::Sprite &ghost1,  sf::Sprite &ghost2,  sf::Sprite &ghost3,  sf::Sprite &ghost4) {
 
-         // Sprites dos dementadores (ghost) - Textura
-     //Ghost1
-    sf::Texture texturaGhost1; // ✅ Criando o objeto textura do ghost
+    // Sprites dos dementadores (ghost) - Textura
+
+    //Ghost1
+    static sf::Texture texturaGhost1; // ✅ Criando o objeto textura do ghost
     if (!texturaGhost1.loadFromFile("resources/ghost1.png")) {
        std::cout << "Erro lendo imagem ghost1.png\n";
     //return 0;
     }
-    sf::Vector2u tamanhoGhost1 = texturaGhost1.getSize(); // ✅ Pega o tamanho real
+
+    static sf::Vector2u tamanhoGhost1 = texturaGhost1.getSize(); // ✅ Pega o tamanho real
     //sf::Sprite ghost1; // ✅ Criando objeto sprite ghost1
     ghost1.setTexture(texturaGhost1);
     ghost1.setOrigin(tamanhoGhost1.x / 2.0f, tamanhoGhost1.y / 2.0f);
     ghost1.setScale(1.3f, 1.3f);
 
     //Ghost2
-
-    sf::Texture texturaGhost2; // ✅ Criando o objeto textura do ghost
+    static sf::Texture texturaGhost2; // ✅ Criando o objeto textura do ghost
     if (!texturaGhost2.loadFromFile("resources/ghost2.png")) {
        std::cout << "Erro lendo imagem ghost2.png\n";
     //return 0;
@@ -287,7 +235,7 @@ void defineGhost( sf::Sprite &ghost1,  sf::Sprite &ghost2,  sf::Sprite &ghost3, 
     
     //Ghost3
 
-    sf::Texture texturaGhost3; // ✅ Criando o objeto textura do ghost
+    static sf::Texture texturaGhost3; // ✅ Criando o objeto textura do ghost
     if (!texturaGhost3.loadFromFile("resources/ghost3.png")) {
        std::cout << "Erro lendo imagem ghost3.png\n";
    // return 0;
@@ -300,7 +248,7 @@ void defineGhost( sf::Sprite &ghost1,  sf::Sprite &ghost2,  sf::Sprite &ghost3, 
 
     //Ghost4
 
-    sf::Texture texturaGhost4; // ✅ Criando o objeto textura do ghost
+    static sf::Texture texturaGhost4; // ✅ Criando o objeto textura do ghost
     if (!texturaGhost4.loadFromFile("resources/ghost4.png")) {
        std::cout << "Erro lendo imagem ghost4.png\n";
    // return 0;
