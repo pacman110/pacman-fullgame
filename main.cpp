@@ -1,6 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 
+
 // Código base para jogo do Pac-Man usando SFML
 // Mapa desenhado:        André Gustavo   15/06/23
 // Movimentos Pac-Man:    André Gustavo   15/06/23
@@ -184,12 +185,12 @@ int main() {
                   posy++;   // down key: move o PacMan para baixo
             }
         }
-    }
+    
 
-       // limpa a janela com a cor preta
-window.clear(sf::Color::Black);
-// desenha o fundo da tela (imagem única)
-window.draw(spriteFundo);
+        // limpa a janela com a cor preta
+    window.clear(sf::Color::Black);
+    // desenha o fundo da tela (imagem única)
+    window.draw(spriteFundo);
 
 
         // desenhar tudo aqui...
@@ -220,6 +221,6 @@ window.draw(spriteFundo);
         window.draw(ghost4);
         // termina e desenha o frame corrente
         window.display();
-
+        }
     return 0;
 }
