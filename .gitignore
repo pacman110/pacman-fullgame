@@ -1,4 +1,22 @@
-*.exe           
-*.o             
-*.out           
-*.log           
+# Ignorar executáveis
+*.exe
+
+# Ignorar arquivos de objetos
+*.o
+*.obj
+
+# Ignorar dependências de compilação
+*.log
+*.d
+
+# Ignorar pastas temporárias
+build/
+bin/
+out/
+
+# Ignorar arquivos de editor (VSCode, CLion, etc.)
+.vscode/
+.idea/
+
+# Ignorar backups
+*~
