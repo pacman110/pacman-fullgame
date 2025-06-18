@@ -1,3 +1,4 @@
+#include <SFML/Audio.hpp>  // <-- Adicionado para áudio
 #include <SFML/Graphics.hpp>
 #include <iostream>
 
@@ -160,6 +161,18 @@ int main() {
     sf::Sprite spriteParede; // Criando objeto sprite fundo
     spriteParede.setTexture(texturaParede);
     // executa o programa enquanto a janela está aberta
+
+    // Música de fundo
+    sf::Music music;
+      if (!music.openFromFile("resources/hp_sound.ogg")) {
+    std::cout << "Erro ao carregar a música\n";
+    return 0;
+    }
+    music.setLoop(true);  // Repetir a música
+    music.setVolume(100);    // Volume de 0 a 100 (pode ajustar para menos se estiver muito alto)
+    music.play();         // Começa a tocar
+
+
     while (window.isOpen()) {
 
         // verifica todos os eventos que foram acionados na janela desde a última iteração do loop

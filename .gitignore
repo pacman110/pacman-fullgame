@@ -1,4 +1,4 @@
-*.exe           # ignora todos os executáveis
-*.o             # ignora arquivos objeto (compilação intermediária)
-*.out           # ignora arquivos .out (em Linux)
-*.log           # ignora arquivos de log
+*.exe           
+*.o             
+*.out           
+*.log           
