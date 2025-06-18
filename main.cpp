@@ -1,6 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 
+
 // Código base para jogo do Pac-Man usando SFML
 // Mapa desenhado:        André Gustavo   15/06/23
 // Movimentos Pac-Man:    André Gustavo   15/06/23
@@ -184,12 +185,12 @@ int main() {
                   posy++;   // down key: move o PacMan para baixo
             }
         }
-    }
+    
 
-       // limpa a janela com a cor preta
-window.clear(sf::Color::Black);
-// desenha o fundo da tela (imagem única)
-window.draw(spriteFundo);
+        // limpa a janela com a cor preta
+    window.clear(sf::Color::Black);
+    // desenha o fundo da tela (imagem única)
+    window.draw(spriteFundo);
 
 
         // desenhar tudo aqui...
@@ -209,17 +210,20 @@ window.draw(spriteFundo);
             }
         // desenha o PacMan na posição atual
         pac.setPosition(posx * SIZE + SIZE / 2.0f, posy * SIZE + SIZE / 2.0f);
-        ghost1.setPosition(ghostX * SIZE + SIZE / 2.0f, ghostY * SIZE + SIZE / 2.0f);
-        ghost2.setPosition((ghostX+3) * SIZE + SIZE / 2.0f, ghostY * SIZE + SIZE / 2.0f);
-        ghost3.setPosition(ghostX * SIZE + SIZE / 2.0f, (ghostY) * SIZE + SIZE / 2.0f);
-        ghost4.setPosition((ghostX-2) * SIZE + SIZE / 2.0f, (ghostY) * SIZE + SIZE / 2.0f);
+        ghost1.setPosition(ghostX * SIZE + SIZE / 2.0f, (ghostY-2) * SIZE + SIZE / 2.0f);
+        ghost2.setPosition((ghostX-2) * SIZE + SIZE / 2.0f, (ghostY-1) * SIZE + SIZE / 2.0f);
+        ghost3.setPosition((ghostX+2) * SIZE + SIZE / 2.0f, (ghostY-1) * SIZE + SIZE / 2.0f);
+        ghost4.setPosition(ghostX * SIZE + SIZE / 2.0f, ghostY * SIZE + SIZE / 2.0f);
         window.draw(pac);
+
         window.draw(ghost1);
         window.draw(ghost2);
         window.draw(ghost3);
         window.draw(ghost4);
+       
         // termina e desenha o frame corrente
         window.display();
-
+        
+        }
     return 0;
 }

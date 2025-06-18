@@ -1,7 +1,4 @@
-a.exe
-<<<<<<< HEAD
-=======
-a.exe
->>>>>>> e543bed680a2d3071511bab2dcac455b9fa3db24
-a.exe
-a.exe
+*.exe           # ignora todos os executáveis
+*.o             # ignora arquivos objeto (compilação intermediária)
+*.out           # ignora arquivos .out (em Linux)
+*.log           # ignora arquivos de log
