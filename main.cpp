@@ -210,7 +210,7 @@ window.draw(spriteFundo);
         // desenha o PacMan na posição atual
         pac.setPosition(posx * SIZE + SIZE / 2.0f, posy * SIZE + SIZE / 2.0f);
         ghost1.setPosition(ghostX * SIZE + SIZE / 2.0f, ghostY * SIZE + SIZE / 2.0f);
-        ghost2.setPosition((ghostX+2) * SIZE + SIZE / 2.0f, (ghostY) * SIZE + SIZE / 2.0f);
+        ghost2.setPosition((ghostX+3) * SIZE + SIZE / 2.0f, ghostY * SIZE + SIZE / 2.0f);
         ghost3.setPosition(ghostX * SIZE + SIZE / 2.0f, (ghostY) * SIZE + SIZE / 2.0f);
         ghost4.setPosition((ghostX-2) * SIZE + SIZE / 2.0f, (ghostY) * SIZE + SIZE / 2.0f);
         window.draw(pac);
