@@ -62,6 +62,25 @@ double ghost3Y = 14;
 double ghost4X = 15.5;
 double ghost4Y = 14; 
 
+//verificar se os dementadores ainda estão dentro da caixa inicial
+bool ghost1Preso = true;
+bool ghost2Preso = true;
+bool ghost3Preso = true;
+bool ghost4Preso = true;
+
+// Direção atual dos fantasmas
+int dirGhost1 = 0; //  em cima 
+int dirGhost2 = 1; // em baixo
+int dirGhost3 = 2; // a esquerda
+int dirGhost4 = 3; // a direita
+
+// Clocks para controlar tempo de movimento dos fantasmas
+sf::Clock clockGhost1;
+sf::Clock clockGhost2;
+sf::Clock clockGhost3;
+sf::Clock clockGhost4;
+
+
 // PROTOTIPO DE FUNCOES
 
 void defineGhost(sf::Sprite &ghost1, sf::Sprite &ghost1_left, sf::Sprite &ghost1_up, sf::Sprite &ghost1_down,
@@ -69,6 +88,14 @@ void defineGhost(sf::Sprite &ghost1, sf::Sprite &ghost1_left, sf::Sprite &ghost1
                  sf::Sprite &ghost3, sf::Sprite &ghost3_left, sf::Sprite &ghost3_up, sf::Sprite &ghost3_down,
                  sf::Sprite &ghost4, sf::Sprite &ghost4_left, sf::Sprite &ghost4_up, sf::Sprite &ghost4_down);
 
+// Função que verifica se uma coordenada (x, y) é válida para movimentação
+// Retorna true se for dentro dos limites do mapa e não for parede
+
+bool podeMover(int x, int y) {                                        // Verifica se x está entre 0 e 28 (colunas válidas do mapa)
+   return x >= 0 && x < 29 && y >= 0 && y < 31 && mapa[y][x] != '1';  // Verifica se y está entre 0 e 30 (linhas válidas do mapa)
+}                                                                     // Verifica se o caractere naquela posição não é '1' (parede)
+                                                                      
+    
 int main() {
     // cria a janela
     sf::RenderWindow window(sf::VideoMode(980, 1085), "Potter-Man");
@@ -246,7 +273,182 @@ int main() {
 
     //(teletransporte do pac de um lado para outo)
     if (posx < 0) posx = 27;     
-    if (posx > 27) posx = 0;      
+    if (posx > 27) posx = 0; 
+
+    //Movimento Ghost1 aleatório//
+    
+    // Movimento ghost1: aleatório com atraso de 1s
+    if (ghost1Preso) {
+       if (clockGhost1.getElapsedTime().asSeconds() > 1.0f && podeMover(ghost1X, ghost1Y - 1)) {
+          ghost1Y -= 1;
+          ghost1 = ghost1_up;
+          if ((int)ghost1Y < 13) ghost1Preso = false;
+             clockGhost1.restart();
+       }
+    } 
+    else {
+    // Verifica se já passou 0.2 segundos desde o último movimento do fantasma 1
+    if (clockGhost1.getElapsedTime().asSeconds() > 0.2f) {
+    // Define deslocamentos para cima, baixo, esquerda e direita
+       int dx[] = {0, 0, -1, 1};    // variação em X para cada direção
+       int dy[] = {-1, 1, 0, 0};    // variação em Y para cada direção
+
+    // Sorteia uma direção aleatória entre 0 e 3
+       int novaDirecao = rand() % 4;
+
+    // Calcula posição tentativa com base na direção sorteada
+       int proxX = ghost1X + dx[novaDirecao];
+       int proxY = ghost1Y + dy[novaDirecao];
+
+    // Verifica se a nova posição não é uma parede
+       if (podeMover(proxX, proxY)) {
+        // Atualiza posição se for possível
+           ghost1X = proxX;
+           ghost1Y = proxY;
+           // muda o sprite conforme a direção sorteada
+          if (novaDirecao == 0) ghost1 = ghost1_up;
+          else if (novaDirecao == 1) ghost1 = ghost1_down;
+          else if (novaDirecao == 2) ghost1 = ghost1_left;
+        // direita (novaDirecao == 3): mantém sprite padrão ghost1
+       }
+    // Reinicia o relógio do fantasma 1 para contar novo intervalo
+    clockGhost1.restart();
+    }
+    }
+
+    //Movimento Ghost2 aleatório
+    
+    // Movimento ghost2: aleatório com atraso de 2s
+    if (ghost1Preso) {
+       if (clockGhost2.getElapsedTime().asSeconds() > 1.0f && podeMover(ghost2X, ghost2Y - 1)) {
+          ghost2Y -= 1;
+          ghost2 = ghost2_up;
+          if ((int)ghost2Y < 13) ghost1Preso = false;
+             clockGhost2.restart();
+       }
+    } 
+    else {
+    // Verifica se já passou 0.2 segundos desde o último movimento do fantasma 1
+    if (clockGhost2.getElapsedTime().asSeconds() > 0.2f) {
+    // Define deslocamentos para cima, baixo, esquerda e direita
+       int dx[] = {0, 0, -1, 1};    // variação em X para cada direção
+       int dy[] = {-1, 1, 0, 0};    // variação em Y para cada direção
+
+    // Sorteia uma direção aleatória entre 0 e 3
+       int novaDirecao = rand() % 4;
+
+    // Calcula posição tentativa com base na direção sorteada
+       int proxX = ghost2X + dx[novaDirecao];
+       int proxY = ghost2Y + dy[novaDirecao];
+
+    // Verifica se a nova posição não é uma parede
+       if (podeMover(proxX, proxY)) {
+        // Atualiza posição se for possível
+           ghost2X = proxX;
+           ghost2Y = proxY;
+
+        // muda o sprite conforme a direção sorteada
+           if (novaDirecao == 0) ghost2 = ghost2_up;
+           else if (novaDirecao == 1) ghost2 = ghost2_down;
+           else if (novaDirecao == 2) ghost2 = ghost2_left;
+        // direita (novaDirecao == 3): mantém sprite padrão ghost2
+       }
+
+    // Reinicia o relógio do fantasma 1 para contar novo intervalo
+    clockGhost2.restart();
+    }
+}
+
+    //Movimento Ghost3 persegue pac priorizando primeiro x e depois y
+    
+    //Movimento ghost3: persegue (X depois Y), com atraso de 3s
+    if (ghost3Preso) {
+       if (clockGhost3.getElapsedTime().asSeconds() > 3.0f && podeMover(ghost3X, ghost3Y - 1)) {
+          ghost3Y -= 1;
+          ghost3 = ghost3_up;
+          if ((int)ghost3Y < 13) ghost3Preso = false;
+             clockGhost3.restart();
+    }
+    } else {
+    // Verifica se já passou 0.2 segundos desde o último movimento do fantasma 1
+    if (clockGhost3.getElapsedTime().asSeconds() > 0.2f) {
+    // Inicializa deslocamentos em zero
+       int dx = 0;
+       int dy = 0;
+
+    // Tenta alinhar primeiro no eixo X
+       if ((int)ghost3X < posx && podeMover(ghost3X + 1, ghost3Y)) {
+          dx = 1;  // move para direita
+       }
+       else if ((int)ghost3X > posx && podeMover(ghost3X - 1, ghost3Y)) {
+          dx = -1; // move para esquerda
+       }
+    // Se já estiver alinhado no X, tenta no Y
+       else if ((int)ghost3Y < posy && podeMover(ghost3X, ghost3Y + 1)) {
+          dy = 1;  // move para baixo
+       }
+       else if ((int)ghost3Y > posy && podeMover(ghost3X, ghost3Y - 1)) {
+       dy = -1; // move para cima
+       }
+
+       // atualiza sprite conforme direção
+        if (dx == -1) ghost3 = ghost3_left;
+        else if (dx == 1) /* direita */ ; // sprite padrão
+        else if (dy == 1) ghost3 = ghost3_down;
+        else if (dy == -1) ghost3 = ghost3_up;
+
+    // Aplica movimento
+       ghost3X += dx;
+       ghost3Y += dy;
+
+       clockGhost3.restart();
+    }
+}
+
+    //Movimento Ghost4 persegue pac priorizando primeiro y e depois x
+    
+    if (ghost4Preso) {
+       if (clockGhost4.getElapsedTime().asSeconds() > 4.0f && podeMover(ghost4X, ghost4Y - 1)) {
+          ghost4Y -= 1;
+          ghost4 = ghost4_up;
+          if ((int)ghost4Y < 13) ghost4Preso = false;
+           clockGhost4.restart();
+    }
+    } else {
+    // Verifica se já passou 0.2 segundos desde o último movimento do fantasma 4
+
+    if (clockGhost4.getElapsedTime().asSeconds() > 0.2f) {
+       int dx = 0;
+       int dy = 0;
+
+    // Tenta alinhar primeiro no eixo Y
+       if ((int)ghost4Y < posy && podeMover(ghost4X, ghost4Y + 1)) {
+          dy = 1;  // move para baixo
+       }
+       else if ((int)ghost4Y > posy && podeMover(ghost4X, ghost4Y - 1)) {
+          dy = -1; // move para cima
+       }
+    // Se já estiver alinhado no Y, tenta no X
+       else if ((int)ghost4X < posx && podeMover(ghost4X + 1, ghost4Y)) {
+          dx = 1;  // move para direita
+       }
+       else if ((int)ghost4X > posx && podeMover(ghost4X - 1, ghost4Y)) {
+          dx = -1; // move para esquerda
+       }
+
+       // atualiza sprite conforme direção
+        if (dx == -1) ghost4 = ghost4_left;
+        else if (dx == 1) /* direita */ ; // sprite padrão
+        else if (dy == 1) ghost4 = ghost4_down;
+        else if (dy == -1) ghost4 = ghost4_up;
+
+       ghost4X += dx;
+       ghost4Y += dy;
+
+       clockGhost4.restart();
+    }
+}
+
 
         // limpa a janela com a cor preta
     window.clear(sf::Color::Black);
