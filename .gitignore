@@ -20,3 +20,4 @@ out/
 
 # Ignorar backups
 *~
+*.exe
