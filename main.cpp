@@ -82,20 +82,31 @@ sf::Clock clockGhost4;
 
 
 // PROTOTIPO DE FUNCOES
+// Define os tiles para o fundo e parede
+void defineTiles(sf::Sprite &spriteFundo, sf::Sprite &spriteParede);
+// Define o sprite para as pilulas (pedras)
+void definePedra(sf::Sprite &pedra);
 
+// Define sprites do harry
+void definePacman(sf::Sprite &pac, 
+                  sf::Sprite &pac_up, 
+                  sf::Sprite &pac_down, 
+                  sf::Sprite &pac_left, 
+                  sf::Sprite &pac_right);
+
+// Define sprites dos fantasmas
 void defineGhost(sf::Sprite &ghost1, sf::Sprite &ghost1_left, sf::Sprite &ghost1_up, sf::Sprite &ghost1_down,
-                 sf::Sprite &ghost2, sf::Sprite &ghost2_left, sf::Sprite &ghost2_up, sf::Sprite &ghost2_down,
-                 sf::Sprite &ghost3, sf::Sprite &ghost3_left, sf::Sprite &ghost3_up, sf::Sprite &ghost3_down,
-                 sf::Sprite &ghost4, sf::Sprite &ghost4_left, sf::Sprite &ghost4_up, sf::Sprite &ghost4_down);
+               sf::Sprite &ghost2, sf::Sprite &ghost2_left, sf::Sprite &ghost2_up, sf::Sprite &ghost2_down,
+               sf::Sprite &ghost3, sf::Sprite &ghost3_left, sf::Sprite &ghost3_up, sf::Sprite &ghost3_down,
+               sf::Sprite &ghost4, sf::Sprite &ghost4_left, sf::Sprite &ghost4_up, sf::Sprite &ghost4_down);
 
 // Função que verifica se uma coordenada (x, y) é válida para movimentação
 // Retorna true se for dentro dos limites do mapa e não for parede
-
 bool podeMover(int x, int y) {                                        // Verifica se x está entre 0 e 28 (colunas válidas do mapa)
    return x >= 0 && x < 29 && y >= 0 && y < 31 && mapa[y][x] != '1';  // Verifica se y está entre 0 e 30 (linhas válidas do mapa)
 }                                                                     // Verifica se o caractere naquela posição não é '1' (parede)
-                                                                      
-    
+
+
 int main() {
     // cria a janela
     sf::RenderWindow window(sf::VideoMode(980, 1085), "Potter-Man");
@@ -106,98 +117,32 @@ int main() {
     rectangle.setOutlineThickness(-5);
     rectangle.setOutlineColor(sf::Color(50, 50, 50));
 
-     // // sprite do PacMan
-    sf::Texture texturePac;
-    if (!texturePac.loadFromFile("resources/hp.png")) {
-       std::cout << "Erro lendo imagem hp.png\n";
-        return 0;
-    }
-    sf::Sprite pac; // Criando objeto spitepac
-    pac.setTexture(texturePac); // atribuindo a textura
-    sf::Vector2u tamanhoPac = texturePac.getSize(); // Pega o taamnho real da imagem (Textura do pacman)
-    pac.setOrigin(tamanhoPac.x / 2.5f, tamanhoPac.y / 2.5f); // origem = centro // Divide o tamanho da celula para ir para o centro (f = float)
-    // Tamanho do pacman
-    pac.setScale(1.3f,1.3f);
-
-   // Sprite do PacMan para cima (hp_up)
-   sf::Texture texturePac_up;
-   if (!texturePac_up.loadFromFile("resources/hp_up.png")) {
-      std::cout << "Erro lendo imagem hp_up.png\n";
-       return 0;
-   }
-   sf::Sprite pac_up;
-   pac_up.setTexture(texturePac_up);
-   sf::Vector2u tamanhoPac_up = texturePac_up.getSize();
-   pac_up.setOrigin(tamanhoPac_up.x / 2.5f, tamanhoPac_up.y / 2.5f);
-   pac_up.setScale(1.3f, 1.3f);
-
-   // Sprite do PacMan para baixo (hp_down)
-   sf::Texture texturePac_down;
-   if (!texturePac_down.loadFromFile("resources/hp_down.png")) {
-   std::cout << "Erro lendo imagem hp_down.png\n";
-    return 0;
-   }
-   sf::Sprite pac_down;
-   pac_down.setTexture(texturePac_down);
-   sf::Vector2u tamanhoPac_down = texturePac_down.getSize();
-   pac_down.setOrigin(tamanhoPac_down.x / 2.5f, tamanhoPac_down.y / 2.5f);
-   pac_down.setScale(1.3f, 1.3f);
-
-   // Sprite do PacMan para esquerda (hp_left)
-   sf::Texture texturePac_left;
-   if (!texturePac_left.loadFromFile("resources/hp_left.png")) {
-   std::cout << "Erro lendo imagem hp_left.png\n";
-    return 0;
-   }
-   sf::Sprite pac_left;
-   pac_left.setTexture(texturePac_left);
-   sf::Vector2u tamanhoPac_left = texturePac_left.getSize();
-   pac_left.setOrigin(tamanhoPac_left.x / 2.5f, tamanhoPac_left.y / 2.5f);
-   pac_left.setScale(1.3f, 1.3f);
-
-   // Sprite do PacMan para direita (hp_right)
-   sf::Texture texturePac_right;
-   if (!texturePac_right.loadFromFile("resources/hp_right.png")) {
-   std::cout << "Erro lendo imagem hp_right.png\n";
-    return 0;
-   }
-   sf::Sprite pac_right;
-   pac_right.setTexture(texturePac_right);
-   sf::Vector2u tamanhoPac_right = texturePac_right.getSize();
-   pac_right.setOrigin(tamanhoPac_right.x / 2.5f, tamanhoPac_right.y / 2.5f);
-   pac_right.setScale(1.3f, 1.3f);
-   
+   // Criando os sprites do Harry em todas posições possiveis
+   sf::Sprite pac, pac_up, pac_down, pac_left, pac_right;
+   definePacman(pac, pac_up, pac_down, pac_left, pac_right);
 
     bool moveesquerda = false;
 
-    // Sprite da Pedra (Frutinha) -Textura
-    sf::Texture texturaPedra; // Criando o objeto textura da pedra
-    if (!texturaPedra.loadFromFile("resources/pedra.png")) {
-            std::cout << "Erro lendo imagem pedra.png\n";
-        return 0;
-    } //
-    sf::Vector2u tamanhoTextura = texturaPedra.getSize(); // Pega o taamnho real da imagem (Textura da pedra)
-    sf::Sprite pedra; // Criando objeto spitepedra
-    pedra.setTexture(texturaPedra); // atribuindo a textura
-    pedra.setOrigin(tamanhoTextura.x / 2.0f, tamanhoTextura.y / 2.0f); // origem = centro // Divide o tamanho da celula para ir para o centro (f = float)
-    pedra.setScale(0.8f, 0.8f);
+    sf::Sprite pedra;
+    definePedra(pedra);
+   
 
-    sf::Sprite ghost1;        // ✅ Criando objeto sprite ghost1
+    sf::Sprite ghost1;        //  Criando objeto sprite ghost1
     sf::Sprite ghost1_left;
     sf::Sprite ghost1_up;
     sf::Sprite ghost1_down;
 
-    sf::Sprite ghost2;        // ✅ Criando objeto sprite ghost2
+    sf::Sprite ghost2;        //  Criando objeto sprite ghost2
     sf::Sprite ghost2_left;
     sf::Sprite ghost2_up;
     sf::Sprite ghost2_down;
 
-    sf::Sprite ghost3;        // ✅ Criando objeto sprite ghost3
+    sf::Sprite ghost3;        //  Criando objeto sprite ghost3
     sf::Sprite ghost3_left;
     sf::Sprite ghost3_up;
     sf::Sprite ghost3_down;
 
-    sf::Sprite ghost4;        // ✅ Criando objeto sprite ghost4
+    sf::Sprite ghost4;        //  Criando objeto sprite ghost4
     sf::Sprite ghost4_left;
     sf::Sprite ghost4_up;
     sf::Sprite ghost4_down;
@@ -207,27 +152,13 @@ int main() {
                ghost2, ghost2_left, ghost2_up, ghost2_down,
                ghost3, ghost3_left, ghost3_up, ghost3_down,
                ghost4, ghost4_left, ghost4_up, ghost4_down);
+ 
+   sf::Sprite spriteFundo; // Criando objeto sprite fundo
+   sf::Sprite spriteParede; // Criando objeto sprite fund
+   defineTiles(spriteFundo, spriteParede);
 
 
-    // Carrega textura do fundo único
-    sf::Texture texturaFundo;  // Criando o objeto textura do fundo do jogo
-    if (!texturaFundo.loadFromFile("resources/tiles/fundo.png")) {
-        std::cout << "Erro lendo imagem fundo.png\n";
-        return 0;
-    }
-    sf::Sprite spriteFundo; // Criando objeto sprite fundo
-    spriteFundo.setTexture(texturaFundo);
-
-    sf::Texture texturaParede;  // Criando o objeto textura da parede do jogo
-    if (!texturaParede.loadFromFile("resources/tiles/parede.png")) {
-        std::cout << "Erro lendo imagem parede.png\n";
-        return 0;
-    }
-    sf::Sprite spriteParede; // Criando objeto sprite fundo
-    spriteParede.setTexture(texturaParede);
-    // executa o programa enquanto a janela está aberta
-
-    // Música de fundo
+   // Música de fundo
     sf::Music music;
       if (!music.openFromFile("resources/hp_sound.ogg")) {
     std::cout << "Erro ao carregar a música\n";
@@ -494,195 +425,279 @@ int main() {
         }
     return 0;
 }
+void defineTiles(sf::Sprite &spriteFundo, sf::Sprite &spriteParede) {
+   // Fundo
+   static sf::Texture texturaFundo;  // Criando o objeto textura do fundo do jogo
+   if (!texturaFundo.loadFromFile("resources/tiles/fundo.png")) {
+      std::cout << "Erro lendo imagem fundo.png\n";
+   }
+   spriteFundo.setTexture(texturaFundo);
 
+   // Parede
+   static sf::Texture texturaParede;  // Criando o objeto textura da parede do jogo
+   if (!texturaParede.loadFromFile("resources/tiles/parede.png")) {
+      std::cout << "Erro lendo imagem parede.png\n";
+   }
+   spriteParede.setTexture(texturaParede);
+}
 
+void definePedra(sf::Sprite &pedra){
+    // Sprite da Pedra (Pilula) -Textura
+   static sf::Texture texturaPedra; // Criando o objeto textura da pedra
+   if (!texturaPedra.loadFromFile("resources/pedra.png")) {
+            std::cout << "Erro lendo imagem pedra.png\n";
+    } //
+   sf::Vector2u tamanhoTextura = texturaPedra.getSize(); // Pega o taamnho real da imagem (Textura da pedra)
+     // Criando objeto spitepedra
+    pedra.setTexture(texturaPedra); // atribuindo a textura
+    pedra.setOrigin(tamanhoTextura.x / 2.0f, tamanhoTextura.y / 2.0f); // origem = centro // Divide o tamanho da celula para ir para o centro (f = float)
+   pedra.setScale(0.8f, 0.8f);
+}
+
+void definePacman(sf::Sprite &pac, 
+                  sf::Sprite &pac_up, 
+                  sf::Sprite &pac_down, 
+                  sf::Sprite &pac_left, 
+                  sf::Sprite &pac_right){
+                     // sprite do PacMan
+   static sf::Texture texturePac;
+   if (!texturePac.loadFromFile("resources/hp.png")) {
+      std::cout << "Erro lendo imagem hp.png\n";
+   }
+    pac.setTexture(texturePac); // atribuindo a textura
+    sf::Vector2u tamanhoPac = texturePac.getSize(); // Pega o taamnho real da imagem (Textura do pacman)
+    pac.setOrigin(tamanhoPac.x / 2.5f, tamanhoPac.y / 2.5f); // origem = centro // Divide o tamanho da celula para ir para o centro (f = float)
+    // Tamanho do pacman
+   pac.setScale(1.3f,1.3f);
+
+   // Sprite do PacMan para cima (hp_up)
+   static sf::Texture texturePac_up;
+   if (!texturePac_up.loadFromFile("resources/hp_up.png")) {
+      std::cout << "Erro lendo imagem hp_up.png\n";
+   }
+   pac_up.setTexture(texturePac_up);
+   sf::Vector2u tamanhoPac_up = texturePac_up.getSize();
+   pac_up.setOrigin(tamanhoPac_up.x / 2.5f, tamanhoPac_up.y / 2.5f);
+   pac_up.setScale(1.3f, 1.3f);
+
+   // Sprite do PacMan para baixo (hp_down)
+   static sf::Texture texturePac_down;
+   if (!texturePac_down.loadFromFile("resources/hp_down.png")) {
+   std::cout << "Erro lendo imagem hp_down.png\n";
+   }
+   pac_down.setTexture(texturePac_down);
+   sf::Vector2u tamanhoPac_down = texturePac_down.getSize();
+   pac_down.setOrigin(tamanhoPac_down.x / 2.5f, tamanhoPac_down.y / 2.5f);
+   pac_down.setScale(1.3f, 1.3f);
+
+   // Sprite do PacMan para esquerda (hp_left)
+   static sf::Texture texturePac_left;
+   if (!texturePac_left.loadFromFile("resources/hp_left.png")) {
+   std::cout << "Erro lendo imagem hp_left.png\n";
+   }
+   pac_left.setTexture(texturePac_left);
+   sf::Vector2u tamanhoPac_left = texturePac_left.getSize();
+   pac_left.setOrigin(tamanhoPac_left.x / 2.5f, tamanhoPac_left.y / 2.5f);
+   pac_left.setScale(1.3f, 1.3f);
+
+   // Sprite do PacMan para direita (hp_right)
+   static sf::Texture texturePac_right;
+   if (!texturePac_right.loadFromFile("resources/hp_right.png")) {
+   std::cout << "Erro lendo imagem hp_right.png\n";
+   }
+   pac_right.setTexture(texturePac_right);
+   sf::Vector2u tamanhoPac_right = texturePac_right.getSize();
+   pac_right.setOrigin(tamanhoPac_right.x / 2.5f, tamanhoPac_right.y / 2.5f);
+   pac_right.setScale(1.3f, 1.3f);
+   
+}
 
 void defineGhost(sf::Sprite &ghost1, sf::Sprite &ghost1_left, sf::Sprite &ghost1_up, sf::Sprite &ghost1_down,
                  sf::Sprite &ghost2, sf::Sprite &ghost2_left, sf::Sprite &ghost2_up, sf::Sprite &ghost2_down,
                  sf::Sprite &ghost3, sf::Sprite &ghost3_left, sf::Sprite &ghost3_up, sf::Sprite &ghost3_down,
                  sf::Sprite &ghost4, sf::Sprite &ghost4_left, sf::Sprite &ghost4_up, sf::Sprite &ghost4_down) {
 
-    // Sprites dos dementadores (ghost) - Textura
+         // Sprites dos dementadores (ghost) - Textura
 
-    //Ghost1
+         //Ghost1
 
-static sf::Texture texturaGhost1; // ✅ Criando o objeto textura do ghost1
-if (!texturaGhost1.loadFromFile("resources/ghost1.png")) { // ✅ Carregando imagem ghost1
-    std::cout << "Erro lendo imagem ghost1.png\n"; // ✅ Mensagem de erro
-    // return 0;
-}
-static sf::Vector2u tamanhoGhost1 = texturaGhost1.getSize(); // ✅ Pega o tamanho real
-//sf::Sprite ghost1; // ✅ Criando objeto sprite ghost1
-ghost1.setTexture(texturaGhost1); // ✅ Define textura no sprite
-ghost1.setOrigin(tamanhoGhost1.x / 2.0f, tamanhoGhost1.y / 2.0f); // ✅ Origem no centro
-ghost1.setScale(1.3f, 1.3f); // ✅ Escala da imagem
+      static sf::Texture texturaGhost1; //  Criando o objeto textura do ghost1
+      if (!texturaGhost1.loadFromFile("resources/ghost1.png")) { // Carregando imagem ghost1
+         std::cout << "Erro lendo imagem ghost1.png\n"; //  Mensagem de erro
+         // return 0;
+      }
+      static sf::Vector2u tamanhoGhost1 = texturaGhost1.getSize(); //  Pega o tamanho real
+      //sf::Sprite ghost1; //  Criando objeto sprite ghost1
+      ghost1.setTexture(texturaGhost1); // Define textura no sprite
+      ghost1.setOrigin(tamanhoGhost1.x / 2.0f, tamanhoGhost1.y / 2.0f); //  Origem no centro
+      ghost1.setScale(1.3f, 1.3f); //  Escala da imagem
 
-//Ghost1_left
+      //Ghost1_left
 
-static sf::Texture texturaGhost1_left; // ✅ Criando textura para movimento à esquerda
-if (!texturaGhost1_left.loadFromFile("resources/ghost1_left.png")) {
-    std::cout << "Erro lendo imagem ghost1_left.png\n";
-}
-static sf::Vector2u tamanhoGhost1_left = texturaGhost1_left.getSize(); // ✅ Pega o tamanho real
-//sf::Sprite ghost1_left; // ✅ Criando objeto sprite ghost1_left
-ghost1_left.setTexture(texturaGhost1_left); // ✅ Define textura
-ghost1_left.setOrigin(tamanhoGhost1_left.x / 2.0f, tamanhoGhost1_left.y / 2.0f); // ✅ Origem no centro
-ghost1_left.setScale(1.3f, 1.3f); // ✅ Escala
+      static sf::Texture texturaGhost1_left; //  Criando textura para movimento à esquerda
+      if (!texturaGhost1_left.loadFromFile("resources/ghost1_left.png")) {
+         std::cout << "Erro lendo imagem ghost1_left.png\n";
+      }
+      static sf::Vector2u tamanhoGhost1_left = texturaGhost1_left.getSize(); //  Pega o tamanho real
+      //sf::Sprite ghost1_left; //  Criando objeto sprite ghost1_left
+      ghost1_left.setTexture(texturaGhost1_left); // Define textura
+      ghost1_left.setOrigin(tamanhoGhost1_left.x / 2.0f, tamanhoGhost1_left.y / 2.0f); // Origem no centro
+      ghost1_left.setScale(1.3f, 1.3f); // Escala
 
-//Ghost1_up
+      //Ghost1_up
 
-static sf::Texture texturaGhost1_up; // ✅ Criando textura para movimento para cima
-if (!texturaGhost1_up.loadFromFile("resources/ghost1_up.png")) {
-    std::cout << "Erro lendo imagem ghost1_up.png\n";
-}
-static sf::Vector2u tamanhoGhost1_up = texturaGhost1_up.getSize(); // ✅ Pega o tamanho real
-//sf::Sprite ghost1_up; // ✅ Criando objeto sprite ghost1_up
-ghost1_up.setTexture(texturaGhost1_up); // ✅ Define textura
-ghost1_up.setOrigin(tamanhoGhost1_up.x / 2.0f, tamanhoGhost1_up.y / 2.0f); // ✅ Origem no centro
-ghost1_up.setScale(1.3f, 1.3f); // ✅ Escala
+      static sf::Texture texturaGhost1_up; // Criando textura para movimento para cima
+      if (!texturaGhost1_up.loadFromFile("resources/ghost1_up.png")) {
+         std::cout << "Erro lendo imagem ghost1_up.png\n";
+      }
+      static sf::Vector2u tamanhoGhost1_up = texturaGhost1_up.getSize(); //  Pega o tamanho real
+      //sf::Sprite ghost1_up; //  Criando objeto sprite ghost1_up
+      ghost1_up.setTexture(texturaGhost1_up); //  Define textura
+      ghost1_up.setOrigin(tamanhoGhost1_up.x / 2.0f, tamanhoGhost1_up.y / 2.0f); //  Origem no centro
+      ghost1_up.setScale(1.3f, 1.3f); // Escala
 
-//Ghost1_down
+      //Ghost1_down
 
-static sf::Texture texturaGhost1_down; // ✅ Criando textura para movimento para baixo
-if (!texturaGhost1_down.loadFromFile("resources/ghost1_down.png")) {
-    std::cout << "Erro lendo imagem ghost1_down.png\n";
-}
-static sf::Vector2u tamanhoGhost1_down = texturaGhost1_down.getSize(); // ✅ Pega o tamanho real
-//sf::Sprite ghost1_down; // ✅ Criando objeto sprite ghost1_down
-ghost1_down.setTexture(texturaGhost1_down); // ✅ Define textura
-ghost1_down.setOrigin(tamanhoGhost1_down.x / 2.0f, tamanhoGhost1_down.y / 2.0f); // ✅ Origem no centro
-ghost1_down.setScale(1.3f, 1.3f); // ✅ Escala
+      static sf::Texture texturaGhost1_down; //  Criando textura para movimento para baixo
+      if (!texturaGhost1_down.loadFromFile("resources/ghost1_down.png")) {
+         std::cout << "Erro lendo imagem ghost1_down.png\n";
+      }
+      static sf::Vector2u tamanhoGhost1_down = texturaGhost1_down.getSize(); //  Pega o tamanho real
+      //sf::Sprite ghost1_down; //  Criando objeto sprite ghost1_down
+      ghost1_down.setTexture(texturaGhost1_down); // Define textura
+      ghost1_down.setOrigin(tamanhoGhost1_down.x / 2.0f, tamanhoGhost1_down.y / 2.0f); //  Origem no centro
+      ghost1_down.setScale(1.3f, 1.3f); //  Escala
 
-//Ghost2
+      //Ghost2
 
-static sf::Texture texturaGhost2; // ✅ Criando o objeto textura do ghost2
-if (!texturaGhost2.loadFromFile("resources/ghost2.png")) {
-    std::cout << "Erro lendo imagem ghost2.png\n";
-}
-static sf::Vector2u tamanhoGhost2 = texturaGhost2.getSize(); // ✅ Pega o tamanho real
-//sf::Sprite ghost2;
-ghost2.setTexture(texturaGhost2); // ✅ Define textura
-ghost2.setOrigin(tamanhoGhost2.x / 2.0f, tamanhoGhost2.y / 2.0f); // ✅ Origem no centro
-ghost2.setScale(1.3f, 1.3f); // ✅ Escala
+      static sf::Texture texturaGhost2; //  Criando o objeto textura do ghost2
+      if (!texturaGhost2.loadFromFile("resources/ghost2.png")) {
+         std::cout << "Erro lendo imagem ghost2.png\n";
+      }
+      static sf::Vector2u tamanhoGhost2 = texturaGhost2.getSize(); //  Pega o tamanho real
+      //sf::Sprite ghost2;
+      ghost2.setTexture(texturaGhost2); //  Define textura
+      ghost2.setOrigin(tamanhoGhost2.x / 2.0f, tamanhoGhost2.y / 2.0f); //  Origem no centro
+      ghost2.setScale(1.3f, 1.3f); //  Escala
 
-//Ghost2_left
+      //Ghost2_left
 
-static sf::Texture texturaGhost2_left;
-if (!texturaGhost2_left.loadFromFile("resources/ghost2_left.png")) {
-    std::cout << "Erro lendo imagem ghost2_left.png\n";
-}
-static sf::Vector2u tamanhoGhost2_left = texturaGhost2_left.getSize(); // ✅ Tamanho real
-ghost2_left.setTexture(texturaGhost2_left); // ✅ Define textura
-ghost2_left.setOrigin(tamanhoGhost2_left.x / 2.0f, tamanhoGhost2_left.y / 2.0f); // ✅ Origem no centro
-ghost2_left.setScale(1.3f, 1.3f); // ✅ Escala
+      static sf::Texture texturaGhost2_left;
+      if (!texturaGhost2_left.loadFromFile("resources/ghost2_left.png")) {
+         std::cout << "Erro lendo imagem ghost2_left.png\n";
+      }
+      static sf::Vector2u tamanhoGhost2_left = texturaGhost2_left.getSize(); //  Tamanho real
+      ghost2_left.setTexture(texturaGhost2_left); //  Define textura
+      ghost2_left.setOrigin(tamanhoGhost2_left.x / 2.0f, tamanhoGhost2_left.y / 2.0f); //  Origem no centro
+      ghost2_left.setScale(1.3f, 1.3f); //  Escala
 
-//Ghost2_up
+      //Ghost2_up
 
-static sf::Texture texturaGhost2_up; // ✅ Criando textura para movimento para cima
-if (!texturaGhost2_up.loadFromFile("resources/ghost2_up.png")) {
-    std::cout << "Erro lendo imagem ghost2_up.png\n";
-}
-static sf::Vector2u tamanhoGhost2_up = texturaGhost2_up.getSize(); // ✅ Pega o tamanho real da imagem
-ghost2_up.setTexture(texturaGhost2_up); // ✅ Define textura no sprite ghost2_up
-ghost2_up.setOrigin(tamanhoGhost2_up.x / 2.0f, tamanhoGhost2_up.y / 2.0f); // ✅ Define origem no centro
-ghost2_up.setScale(1.3f, 1.3f); // ✅ Aplica escala no sprite 
+      static sf::Texture texturaGhost2_up; //  Criando textura para movimento para cima
+      if (!texturaGhost2_up.loadFromFile("resources/ghost2_up.png")) {
+         std::cout << "Erro lendo imagem ghost2_up.png\n";
+      }
+      static sf::Vector2u tamanhoGhost2_up = texturaGhost2_up.getSize(); //  Pega o tamanho real da imagem
+      ghost2_up.setTexture(texturaGhost2_up); //  Define textura no sprite ghost2_up
+      ghost2_up.setOrigin(tamanhoGhost2_up.x / 2.0f, tamanhoGhost2_up.y / 2.0f); //  Define origem no centro
+      ghost2_up.setScale(1.3f, 1.3f); //  Aplica escala no sprite 
 
-//Ghost2_down
+      //Ghost2_down
 
-static sf::Texture texturaGhost2_down; // ✅ Criando textura para movimento para baixo
-if (!texturaGhost2_down.loadFromFile("resources/ghost2_down.png")) {
-    std::cout << "Erro lendo imagem ghost2_down.png\n";
-}
-static sf::Vector2u tamanhoGhost2_down = texturaGhost2_down.getSize(); // ✅ Pega o tamanho real da imagem
-ghost2_down.setTexture(texturaGhost2_down); // ✅ Define textura no sprite ghost2_down
-ghost2_down.setOrigin(tamanhoGhost2_down.x / 2.0f, tamanhoGhost2_down.y / 2.0f); // ✅ Define origem no centro
-ghost2_down.setScale(1.3f, 1.3f); // ✅ Aplica escala no sprite
+      static sf::Texture texturaGhost2_down; //  Criando textura para movimento para baixo
+      if (!texturaGhost2_down.loadFromFile("resources/ghost2_down.png")) {
+         std::cout << "Erro lendo imagem ghost2_down.png\n";
+      }
+      static sf::Vector2u tamanhoGhost2_down = texturaGhost2_down.getSize(); //  Pega o tamanho real da imagem
+      ghost2_down.setTexture(texturaGhost2_down); //  Define textura no sprite ghost2_down
+      ghost2_down.setOrigin(tamanhoGhost2_down.x / 2.0f, tamanhoGhost2_down.y / 2.0f); //  Define origem no centro
+      ghost2_down.setScale(1.3f, 1.3f); //  Aplica escala no sprite
 
-//Ghost3
+      //Ghost3
 
-static sf::Texture texturaGhost3; // ✅ Criando textura do ghost3
-if (!texturaGhost3.loadFromFile("resources/ghost3.png")) {
-    std::cout << "Erro lendo imagem ghost3.png\n";
-}
-static sf::Vector2u tamanhoGhost3 = texturaGhost3.getSize(); // ✅ Pega o tamanho real da imagem
-ghost3.setTexture(texturaGhost3); // ✅ Define textura no sprite ghost3
-ghost3.setOrigin(tamanhoGhost3.x / 2.0f, tamanhoGhost3.y / 2.0f); // ✅ Define origem no centro
-ghost3.setScale(1.3f, 1.3f); // ✅ Aplica escala no sprite
+      static sf::Texture texturaGhost3; //  Criando textura do ghost3
+      if (!texturaGhost3.loadFromFile("resources/ghost3.png")) {
+         std::cout << "Erro lendo imagem ghost3.png\n";
+      }
+      static sf::Vector2u tamanhoGhost3 = texturaGhost3.getSize(); //  Pega o tamanho real da imagem
+      ghost3.setTexture(texturaGhost3); //  Define textura no sprite ghost3
+      ghost3.setOrigin(tamanhoGhost3.x / 2.0f, tamanhoGhost3.y / 2.0f); //  Define origem no centro
+      ghost3.setScale(1.3f, 1.3f); //  Aplica escala no sprite
 
-//Ghost3_left
+      //Ghost3_left
 
-static sf::Texture texturaGhost3_left; // ✅ Criando textura para movimento à esquerda
-if (!texturaGhost3_left.loadFromFile("resources/ghost3_left.png")) {
-    std::cout << "Erro lendo imagem ghost3_left.png\n";
-}
-static sf::Vector2u tamanhoGhost3_left = texturaGhost3_left.getSize(); // ✅ Pega o tamanho real da imagem
-ghost3_left.setTexture(texturaGhost3_left); // ✅ Define textura no sprite ghost3_left
-ghost3_left.setOrigin(tamanhoGhost3_left.x / 2.0f, tamanhoGhost3_left.y / 2.0f); // ✅ Define origem no centro
-ghost3_left.setScale(1.3f, 1.3f); // ✅ Aplica escala no sprite
+      static sf::Texture texturaGhost3_left; //  Criando textura para movimento à esquerda
+      if (!texturaGhost3_left.loadFromFile("resources/ghost3_left.png")) {
+         std::cout << "Erro lendo imagem ghost3_left.png\n";
+      }
+      static sf::Vector2u tamanhoGhost3_left = texturaGhost3_left.getSize(); //  Pega o tamanho real da imagem
+      ghost3_left.setTexture(texturaGhost3_left); //  Define textura no sprite ghost3_left
+      ghost3_left.setOrigin(tamanhoGhost3_left.x / 2.0f, tamanhoGhost3_left.y / 2.0f); //  Define origem no centro
+      ghost3_left.setScale(1.3f, 1.3f); //  Aplica escala no sprite
 
-//Ghost3_up
+      //Ghost3_up
 
-static sf::Texture texturaGhost3_up; // ✅ Criando textura para movimento para cima
-if (!texturaGhost3_up.loadFromFile("resources/ghost3_up.png")) {
-    std::cout << "Erro lendo imagem ghost3_up.png\n";
-}
-static sf::Vector2u tamanhoGhost3_up = texturaGhost3_up.getSize(); // ✅ Pega o tamanho real da imagem
-ghost3_up.setTexture(texturaGhost3_up); // ✅ Define textura no sprite ghost3_up
-ghost3_up.setOrigin(tamanhoGhost3_up.x / 2.0f, tamanhoGhost3_up.y / 2.0f); // ✅ Define origem no centro
-ghost3_up.setScale(1.3f, 1.3f); // ✅ Aplica escala no sprite
+      static sf::Texture texturaGhost3_up; //  Criando textura para movimento para cima
+      if (!texturaGhost3_up.loadFromFile("resources/ghost3_up.png")) {
+         std::cout << "Erro lendo imagem ghost3_up.png\n";
+      }
+      static sf::Vector2u tamanhoGhost3_up = texturaGhost3_up.getSize(); //  Pega o tamanho real da imagem
+      ghost3_up.setTexture(texturaGhost3_up); //  Define textura no sprite ghost3_up
+      ghost3_up.setOrigin(tamanhoGhost3_up.x / 2.0f, tamanhoGhost3_up.y / 2.0f); //  Define origem no centro
+      ghost3_up.setScale(1.3f, 1.3f); //  Aplica escala no sprite
 
-//Ghost3_down
+      //Ghost3_down
 
-static sf::Texture texturaGhost3_down; // ✅ Criando textura para movimento para baixo
-if (!texturaGhost3_down.loadFromFile("resources/ghost3_down.png")) {
-    std::cout << "Erro lendo imagem ghost3_down.png\n";
-}
-static sf::Vector2u tamanhoGhost3_down = texturaGhost3_down.getSize(); // ✅ Pega o tamanho real da imagem
-ghost3_down.setTexture(texturaGhost3_down); // ✅ Define textura no sprite ghost3_down
-ghost3_down.setOrigin(tamanhoGhost3_down.x / 2.0f, tamanhoGhost3_down.y / 2.0f); // ✅ Define origem no centro
-ghost3_down.setScale(1.3f, 1.3f); // ✅ Aplica escala no sprite
+      static sf::Texture texturaGhost3_down; //  Criando textura para movimento para baixo
+      if (!texturaGhost3_down.loadFromFile("resources/ghost3_down.png")) {
+         std::cout << "Erro lendo imagem ghost3_down.png\n";
+      }
+      static sf::Vector2u tamanhoGhost3_down = texturaGhost3_down.getSize(); //  Pega o tamanho real da imagem
+      ghost3_down.setTexture(texturaGhost3_down); //  Define textura no sprite ghost3_down
+      ghost3_down.setOrigin(tamanhoGhost3_down.x / 2.0f, tamanhoGhost3_down.y / 2.0f); //  Define origem no centro
+      ghost3_down.setScale(1.3f, 1.3f); //  Aplica escala no sprite
 
-//Ghost4
+      //Ghost4
 
-static sf::Texture texturaGhost4; // ✅ Criando textura do ghost4
-if (!texturaGhost4.loadFromFile("resources/ghost4.png")) {
-    std::cout << "Erro lendo imagem ghost4.png\n";
-}
-static sf::Vector2u tamanhoGhost4 = texturaGhost4.getSize(); // ✅ Pega o tamanho real da imagem
-ghost4.setTexture(texturaGhost4); // ✅ Define textura no sprite ghost4
-ghost4.setOrigin(tamanhoGhost4.x / 2.0f, tamanhoGhost4.y / 2.0f); // ✅ Define origem no centro
-ghost4.setScale(1.3f, 1.3f); // ✅ Aplica escala no sprite
+      static sf::Texture texturaGhost4; //  Criando textura do ghost4
+      if (!texturaGhost4.loadFromFile("resources/ghost4.png")) {
+         std::cout << "Erro lendo imagem ghost4.png\n";
+      }
+      static sf::Vector2u tamanhoGhost4 = texturaGhost4.getSize(); //  Pega o tamanho real da imagem
+      ghost4.setTexture(texturaGhost4); //  Define textura no sprite ghost4
+      ghost4.setOrigin(tamanhoGhost4.x / 2.0f, tamanhoGhost4.y / 2.0f); //  Define origem no centro
+      ghost4.setScale(1.3f, 1.3f); //  Aplica escala no sprite
 
-//Ghost4_left
+      //Ghost4_left
 
-static sf::Texture texturaGhost4_left; // ✅ Criando textura para movimento à esquerda
-if (!texturaGhost4_left.loadFromFile("resources/ghost4_left.png")) {
-    std::cout << "Erro lendo imagem ghost4_left.png\n";
-}
-static sf::Vector2u tamanhoGhost4_left = texturaGhost4_left.getSize(); // ✅ Pega o tamanho real da imagem
-ghost4_left.setTexture(texturaGhost4_left); // ✅ Define textura no sprite ghost4_left
-ghost4_left.setOrigin(tamanhoGhost4_left.x / 2.0f, tamanhoGhost4_left.y / 2.0f); // ✅ Define origem no centro
-ghost4_left.setScale(1.3f, 1.3f); // ✅ Aplica escala no sprite
+      static sf::Texture texturaGhost4_left; //  Criando textura para movimento à esquerda
+      if (!texturaGhost4_left.loadFromFile("resources/ghost4_left.png")) {
+         std::cout << "Erro lendo imagem ghost4_left.png\n";
+      }
+      static sf::Vector2u tamanhoGhost4_left = texturaGhost4_left.getSize(); //  Pega o tamanho real da imagem
+      ghost4_left.setTexture(texturaGhost4_left); //  Define textura no sprite ghost4_left
+      ghost4_left.setOrigin(tamanhoGhost4_left.x / 2.0f, tamanhoGhost4_left.y / 2.0f); //  Define origem no centro
+      ghost4_left.setScale(1.3f, 1.3f); //  Aplica escala no sprite
 
-//Ghost4_up
+      //Ghost4_up
 
-static sf::Texture texturaGhost4_up; // ✅ Criando textura para movimento para cima
-if (!texturaGhost4_up.loadFromFile("resources/ghost4_up.png")) {
-    std::cout << "Erro lendo imagem ghost4_up.png\n";
-}
-static sf::Vector2u tamanhoGhost4_up = texturaGhost4_up.getSize(); // ✅ Pega o tamanho real da imagem
-ghost4_up.setTexture(texturaGhost4_up); // ✅ Define textura no sprite ghost4_up
-ghost4_up.setOrigin(tamanhoGhost4_up.x / 2.0f, tamanhoGhost4_up.y / 2.0f); // ✅ Define origem no centro
-ghost4_up.setScale(1.3f, 1.3f); // ✅ Aplica escala no sprite
+      static sf::Texture texturaGhost4_up; //  Criando textura para movimento para cima
+      if (!texturaGhost4_up.loadFromFile("resources/ghost4_up.png")) {
+         std::cout << "Erro lendo imagem ghost4_up.png\n";
+      }
+      static sf::Vector2u tamanhoGhost4_up = texturaGhost4_up.getSize(); //  Pega o tamanho real da imagem
+      ghost4_up.setTexture(texturaGhost4_up); //  Define textura no sprite ghost4_up
+      ghost4_up.setOrigin(tamanhoGhost4_up.x / 2.0f, tamanhoGhost4_up.y / 2.0f); //  Define origem no centro
+      ghost4_up.setScale(1.3f, 1.3f); //  Aplica escala no sprite
 
-//Ghost4_down
+      //Ghost4_down
 
-static sf::Texture texturaGhost4_down; // ✅ Criando textura para movimento para baixo
-if (!texturaGhost4_down.loadFromFile("resources/ghost4_down.png")) {
-    std::cout << "Erro lendo imagem ghost4_down.png\n";
-}
-static sf::Vector2u tamanhoGhost4_down = texturaGhost4_down.getSize(); // ✅ Pega o tamanho real da imagem
-ghost4_down.setTexture(texturaGhost4_down); // ✅ Define textura no sprite ghost4_down
-ghost4_down.setOrigin(tamanhoGhost4_down.x / 2.0f, tamanhoGhost4_down.y / 2.0f); // ✅ Define origem no centro
-ghost4_down.setScale(1.3f, 1.3f); // ✅ Aplica escala no sprite
-}
+      static sf::Texture texturaGhost4_down; //  Criando textura para movimento para baixo
+      if (!texturaGhost4_down.loadFromFile("resources/ghost4_down.png")) {
+         std::cout << "Erro lendo imagem ghost4_down.png\n";
+      }
+      static sf::Vector2u tamanhoGhost4_down = texturaGhost4_down.getSize(); // Pega o tamanho real da imagem
+      ghost4_down.setTexture(texturaGhost4_down); // Define textura no sprite ghost4_down
+      ghost4_down.setOrigin(tamanhoGhost4_down.x / 2.0f, tamanhoGhost4_down.y / 2.0f); // Define origem no centro
+      ghost4_down.setScale(1.3f, 1.3f); //  Aplica escala no sprite
+      }
