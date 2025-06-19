@@ -5,7 +5,7 @@
 
 // Código base para jogo do Pac-Man usando SFML
 // Mapa desenhado:        André Gustavo   15/06/23
-// Movimentos Pac-Man:    André Gustavo   15/06/23
+// Movimentos Pac-Man:    
 // Movimento contínuo:    não implementado
 // Colisão com paredes:   não implementada
 // Intenção de movimento: não implementado
@@ -243,7 +243,10 @@ int main() {
                }
             }
         }
-    
+
+    //(teletransporte do pac de um lado para outo)
+    if (posx < 0) posx = 27;     
+    if (posx > 27) posx = 0;      
 
         // limpa a janela com a cor preta
     window.clear(sf::Color::Black);
