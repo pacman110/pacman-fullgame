@@ -1,7 +1,7 @@
 #include <SFML/Audio.hpp>  // <-- Adicionado para áudio
 #include <SFML/Graphics.hpp>
 #include <iostream>
-
+#include <string> 
 
 // Código base para jogo do Pac-Man usando SFML
 // Mapa desenhado:        André Gustavo   15/06/23
@@ -82,6 +82,8 @@ sf::Clock clockGhost4;
 
 
 // PROTOTIPO DE FUNCOES
+// Define os textos do jogo
+void defineText (sf::Text &pontuacao, sf::Text &endGame, sf::Text &temporizador, sf::Font &font);
 // Define os tiles para o fundo e parede
 void defineTiles(sf::Sprite &spriteFundo, sf::Sprite &spriteParede);
 // Define o sprite para as pilulas (pedras)
@@ -107,8 +109,14 @@ bool podeMover(int x, int y) {                                        // Verific
 }                                                                     // Verifica se o caractere naquela posição não é '1' (parede)
 
 
+
 int main() {
     // cria a janela
+   bool jogoFinalizado = false;
+   bool moveesquerda = false;
+   bool musicaFinalPlay = false;
+   int totalPedras = 0;
+
     sf::RenderWindow window(sf::VideoMode(980, 1085), "Potter-Man");
 
     // shape da parede
@@ -121,7 +129,6 @@ int main() {
    sf::Sprite pac, pac_up, pac_down, pac_left, pac_right;
    definePacman(pac, pac_up, pac_down, pac_left, pac_right);
 
-    bool moveesquerda = false;
 
     sf::Sprite pedra;
     definePedra(pedra);
@@ -160,15 +167,44 @@ int main() {
 
    // Música de fundo
     sf::Music music;
-      if (!music.openFromFile("resources/hp_sound.ogg")) {
+      if (!music.openFromFile("resources/sounds/hp_sound.ogg")) {
     std::cout << "Erro ao carregar a música\n";
     return 0;
     }
     music.setLoop(true);  // Repetir a música
     music.setVolume(100);    // Volume de 0 a 100 (pode ajustar para menos se estiver muito alto)
     music.play();         // Começa a tocar
+   
 
+    // musica de fim de jogo
+    sf::Music musicEndGame;
+      if (!musicEndGame.openFromFile("resources/sounds/hp_endGame.ogg")) {
+    std::cout << "Erro ao carregar a música\n";
+    return 0;
+    }
 
+   
+   int contadorPedra = 0;
+
+   sf::Font font; // Carregando a fonte da pontuacao
+   if (!font.loadFromFile("resources/fonts/upheavtt.ttf")) { 
+   std::cout << "Erro carregando fonte\n";
+   return 0;
+   }
+   // Conta a quantidade de pedras
+   for(int i=0; i<31; i++)
+      for(int j=0; j<28; j++){
+         if(mapa[i][j]=='2'){
+            totalPedras++;
+      }
+   }
+
+   sf::Text pontuacao;
+   sf::Text temporizador;
+   sf::Text endGame;
+   defineText(pontuacao, temporizador, endGame, font);
+
+   sf::Clock gameClock; // relogio do jogo
     while (window.isOpen()) {
 
         // verifica todos os eventos que foram acionados na janela desde a última iteração do loop
@@ -179,25 +215,53 @@ int main() {
                 window.close();
 
             // tecla pressionada
-            if (event.type == sf::Event::KeyPressed) {
+            if (!jogoFinalizado && event.type == sf::Event::KeyPressed) {
                if (event.key.code == sf::Keyboard::Left)
                   pac = pac_left;
                if (event.key.code == sf::Keyboard::Left && mapa [posy][posx-1] != '1'){
                   posx--;   // left key: move o PacMan para esquerda
                   moveesquerda = true;
+                  if(mapa[posy][posx] == '2'){
+                     mapa[posy][posx] = '0';
+                     contadorPedra++;
+                     std::cout << "Comidas: " << contadorPedra << std::endl;
+                     if(contadorPedra == totalPedras)
+                        jogoFinalizado = true;
+                  }
                }
                else if (event.key.code == sf::Keyboard::Right && mapa [posy] [posx+1] !='1'){
                   pac = pac_right; 
                   posx++;   // right key: move o PacMan para direita
                   moveesquerda = false;
+                  if(mapa[posy][posx] == '2'){
+                     mapa[posy][posx] = '0';
+                     contadorPedra++;
+                     std::cout << "Comidas: " << contadorPedra << std::endl;
+                     if(contadorPedra == totalPedras)
+                        jogoFinalizado = true;
+                  }
                }   
                else if (event.key.code == sf::Keyboard::Up && mapa [posy-1][posx] != '1' ){
                   pac = pac_up;
                   posy--;   // up key: move o PacMan para cima  
+                  if(mapa[posy][posx] == '2'){
+                     mapa[posy][posx] = '0';
+                     contadorPedra++;
+                     std::cout << "Comidas: " << contadorPedra << std::endl;
+                     if(contadorPedra == totalPedras)
+                        jogoFinalizado = true;
+                  }
                }
                else if (event.key.code == sf::Keyboard::Down && mapa [posy+1][posx] != '1' ){
                   pac = pac_down;
                   posy++;   // down key: move o PacMan para baixo
+                  if(mapa[posy][posx] == '2'){
+                     mapa[posy][posx] = '0';
+                     contadorPedra++;
+                     std::cout << "Comidas: " << contadorPedra << std::endl;
+                     if(contadorPedra == totalPedras)
+                        jogoFinalizado = true;
+                  }
                }
             }
         }
@@ -378,10 +442,28 @@ int main() {
 
        clockGhost4.restart();
     }
+    
 }
+  
 
+   // CONTEUDO DE TEXTO 
 
-        // limpa a janela com a cor preta
+   // Temporizador
+   // armazena o tempo ocorrido desde o inicio do clock em segundos
+   int segundos = gameClock.getElapsedTime().asSeconds(); 
+   // converte em minutos 
+   int minutos = segundos / 60;
+   // pega o que resta de segundos
+   segundos = segundos % 60;
+   temporizador.setString("Tempo: " + std::to_string(minutos) + ":" + (segundos < 10 ? "0" : "") + std::to_string(segundos));
+   
+   // Define o valor de pílulas comidas
+   pontuacao.setString("Numero de Pedras Filosofais encontradas: " + std::to_string(contadorPedra));
+   
+   // Mensagem de fim de jogo
+   endGame.setString("Patronus! Pedras coletadas! Hogwarts agradece, bravo(a) bruxo(a).");
+   
+   // limpa a janela com a cor preta
     window.clear(sf::Color::Black);
     // desenha o fundo da tela (imagem única)
     window.draw(spriteFundo);
@@ -412,18 +494,53 @@ int main() {
         ghost3.setPosition(ghost3X * SIZE + SIZE / 2.0f, ghost3Y * SIZE + SIZE / 2.0f);
         ghost4.setPosition(ghost4X * SIZE + SIZE / 2.0f, ghost4Y * SIZE + SIZE / 2.0f);
 
-        window.draw(pac);
+      window.draw(pac);
 
-        window.draw(ghost1);
-        window.draw(ghost2);
-        window.draw(ghost3);
-        window.draw(ghost4);
-       
+      window.draw(ghost1);
+      window.draw(ghost2);
+      window.draw(ghost3);
+      window.draw(ghost4);
+
+     
+
+      if(jogoFinalizado){
+         window.draw(endGame);
+         if(!musicaFinalPlay){
+            music.stop();
+            musicEndGame.setVolume(100);    // Volume de 0 a 100 (pode ajustar para menos se estiver muito alto)
+            musicEndGame.play();         // Começa a tocar
+            musicaFinalPlay = true;
+         }
+      }
+
+      else{
+         window.draw(pontuacao);
+         window.draw(temporizador);
+      }
         // termina e desenha o frame corrente
         window.display();
         
         }
     return 0;
+}
+void defineText (sf::Text &pontuacao, sf::Text &temporizador, sf::Text &endGame, sf::Font &font){
+   
+   pontuacao.setFont(font);
+   pontuacao.setCharacterSize(24); // Tamanho da fonte
+   pontuacao.setFillColor(sf::Color(189,118,44)); // Cor da fonte
+   pontuacao.setPosition(35, 10); // Posição na janela
+
+   temporizador.setFont(font);
+   temporizador.setCharacterSize(24); // Tamanho da fonte
+   temporizador.setFillColor(sf::Color(189,118,44)); // Cor da fonte
+   temporizador.setPosition(815, 10); // Posição na janela
+
+   endGame.setFont(font);
+   endGame.setCharacterSize(24); // tamanho da fonte
+   endGame.setFillColor(sf::Color::Black); // cor da fonte
+   endGame.setPosition(35, 5); // posição na janela
+   endGame.setOutlineThickness(4); // tamanho da borda
+   endGame.setOutlineColor(sf::Color(189,118,44)); // Cor da borda
 }
 void defineTiles(sf::Sprite &spriteFundo, sf::Sprite &spriteParede) {
    // Fundo
@@ -440,7 +557,6 @@ void defineTiles(sf::Sprite &spriteFundo, sf::Sprite &spriteParede) {
    }
    spriteParede.setTexture(texturaParede);
 }
-
 void definePedra(sf::Sprite &pedra){
     // Sprite da Pedra (Pilula) -Textura
    static sf::Texture texturaPedra; // Criando o objeto textura da pedra
@@ -453,7 +569,6 @@ void definePedra(sf::Sprite &pedra){
     pedra.setOrigin(tamanhoTextura.x / 2.0f, tamanhoTextura.y / 2.0f); // origem = centro // Divide o tamanho da celula para ir para o centro (f = float)
    pedra.setScale(0.8f, 0.8f);
 }
-
 void definePacman(sf::Sprite &pac, 
                   sf::Sprite &pac_up, 
                   sf::Sprite &pac_down, 
@@ -511,11 +626,11 @@ void definePacman(sf::Sprite &pac,
    pac_right.setScale(1.3f, 1.3f);
    
 }
-
 void defineGhost(sf::Sprite &ghost1, sf::Sprite &ghost1_left, sf::Sprite &ghost1_up, sf::Sprite &ghost1_down,
-                 sf::Sprite &ghost2, sf::Sprite &ghost2_left, sf::Sprite &ghost2_up, sf::Sprite &ghost2_down,
-                 sf::Sprite &ghost3, sf::Sprite &ghost3_left, sf::Sprite &ghost3_up, sf::Sprite &ghost3_down,
-                 sf::Sprite &ghost4, sf::Sprite &ghost4_left, sf::Sprite &ghost4_up, sf::Sprite &ghost4_down) {
+               sf::Sprite &ghost2, sf::Sprite &ghost2_left, sf::Sprite &ghost2_up, sf::Sprite &ghost2_down,
+               sf::Sprite &ghost3, sf::Sprite &ghost3_left, sf::Sprite &ghost3_up, sf::Sprite &ghost3_down,
+               sf::Sprite &ghost4, sf::Sprite &ghost4_left, sf::Sprite &ghost4_up, sf::Sprite &ghost4_down) {
+
 
          // Sprites dos dementadores (ghost) - Textura
 
