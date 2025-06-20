@@ -85,6 +85,8 @@ bool jogoFinalizado = false; // situacao do jogo
 bool musicaFinalPlay = false; // situacao da musica final
 
 // PROTOTIPO DE FUNCOES
+// Define as musicas do jogo
+void DefineMusic(sf::Music &music, sf::Music &musicEndGame);
 // Define os textos do jogo
 void defineText (sf::Text &pontuacao, sf::Text &endGame, sf::Text &temporizador, sf::Font &font);
 // Define os tiles para o fundo e parede
@@ -115,6 +117,12 @@ bool podeMover(int x, int y) {                                        // Verific
 
 int main() {
    int totalPedras = 0;
+   int contadorPedra = 0;
+   // Define as possiveis direcoes que o harry pode andar 
+   enum Direcao { NENHUMA, ESQUERDA, DIREITA, CIMA, BAIXO };
+   // Inicia a direçao seja nenhuma, ou seja, neutra e parada
+   Direcao direcaoAtual = NENHUMA;
+
     sf::RenderWindow window(sf::VideoMode(980, 1085), "Potter-Man");
 
     // shape da parede
@@ -164,31 +172,16 @@ int main() {
 
 
    // Música de fundo
-    sf::Music music;
-      if (!music.openFromFile("resources/sounds/hp_sound.ogg")) {
-    std::cout << "Erro ao carregar a música\n";
-    return 0;
-    }
-    music.setLoop(true);  // Repetir a música
-    music.setVolume(100);    // Volume de 0 a 100 (pode ajustar para menos se estiver muito alto)
-    music.play();         // Começa a tocar
-   
-
-    // musica de fim de jogo
-    sf::Music musicEndGame;
-      if (!musicEndGame.openFromFile("resources/sounds/hp_endGame.ogg")) {
-    std::cout << "Erro ao carregar a música\n";
-    return 0;
-    }
-
-   
-   int contadorPedra = 0;
+   sf::Music music;
+   sf::Music musicEndGame; // Musica de fim de jogo
+   DefineMusic(music, musicEndGame);
 
    sf::Font font; // Carregando a fonte da pontuacao
    if (!font.loadFromFile("resources/fonts/upheavtt.ttf")) { 
    std::cout << "Erro carregando fonte\n";
    return 0;
    }
+
    // Conta a quantidade de pedras
    for(int i=0; i<31; i++)
       for(int j=0; j<28; j++){
@@ -200,16 +193,11 @@ int main() {
    sf::Text pontuacao;
    sf::Text temporizador;
    sf::Text endGame;
+   // Define os textos 
    defineText(pontuacao, temporizador, endGame, font);
 
    sf::Clock gameClock; // relogio do jogo
    sf::Clock clockAndar; // relogio do andar do harry
-   
-   // Define as possiveis direcoes que o harry pode andar 
-   enum Direcao { NENHUMA, ESQUERDA, DIREITA, CIMA, BAIXO };
-   // Inicia a direçao seja nenhuma, neutra, parada
-   Direcao direcaoAtual = NENHUMA;
-
 
     while (window.isOpen()) {
 
@@ -241,7 +229,7 @@ int main() {
         }
 
       // a cada 0.2 segundos, atualiza a posicao automaticamente do pacman
-      if (!jogoFinalizado && clockAndar.getElapsedTime() > sf::seconds(0.1)) {
+      if (!jogoFinalizado && clockAndar.getElapsedTime() > sf::seconds(0.2)) {
       clockAndar.restart(); // reinicia o relogio para o próximo intervalo 
       // move o harry conforme a direção atual, se não houver parede, ou seja '1')
       switch (direcaoAtual) {
@@ -540,6 +528,20 @@ int main() {
         }
     return 0;
 }
+void DefineMusic(sf::Music &music, sf::Music &musicEndGame){
+   if (!music.openFromFile("resources/sounds/hp_sound.ogg")) {
+   std::cout << "Erro ao carregar a música\n";
+   }
+    music.setLoop(true);  // Repetir a música
+    music.setVolume(100);    // Volume de 0 a 100 (pode ajustar para menos se estiver muito alto)
+    music.play();         // Começa a tocar
+   
+    // musica de fim de jogo
+   if (!musicEndGame.openFromFile("resources/sounds/hp_endGame.ogg")) {
+   std::cout << "Erro ao carregar a música\n";
+   }
+
+};
 void defineText (sf::Text &pontuacao, sf::Text &temporizador, sf::Text &endGame, sf::Font &font){
    
    pontuacao.setFont(font);
@@ -591,7 +593,7 @@ void definePacman(sf::Sprite &pac,
                   sf::Sprite &pac_down, 
                   sf::Sprite &pac_left, 
                   sf::Sprite &pac_right){
-                     // sprite do PacMan
+    // sprite do PacMan
    static sf::Texture texturePac;
    if (!texturePac.loadFromFile("resources/hp.png")) {
       std::cout << "Erro lendo imagem hp.png\n";
