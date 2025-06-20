@@ -79,7 +79,10 @@ sf::Clock clockGhost1;
 sf::Clock clockGhost2;
 sf::Clock clockGhost3;
 sf::Clock clockGhost4;
+// cria a janela
 
+bool jogoFinalizado = false; // situacao do jogo
+bool musicaFinalPlay = false; // situacao da musica final
 
 // PROTOTIPO DE FUNCOES
 // Define os textos do jogo
@@ -111,12 +114,7 @@ bool podeMover(int x, int y) {                                        // Verific
 
 
 int main() {
-    // cria a janela
-   bool jogoFinalizado = false;
-   bool moveesquerda = false;
-   bool musicaFinalPlay = false;
    int totalPedras = 0;
-
     sf::RenderWindow window(sf::VideoMode(980, 1085), "Potter-Man");
 
     // shape da parede
@@ -205,6 +203,14 @@ int main() {
    defineText(pontuacao, temporizador, endGame, font);
 
    sf::Clock gameClock; // relogio do jogo
+   sf::Clock clockAndar; // relogio do andar do harry
+   
+   // Define as possiveis direcoes que o harry pode andar 
+   enum Direcao { NENHUMA, ESQUERDA, DIREITA, CIMA, BAIXO };
+   // Inicia a direçao seja nenhuma, neutra, parada
+   Direcao direcaoAtual = NENHUMA;
+
+
     while (window.isOpen()) {
 
         // verifica todos os eventos que foram acionados na janela desde a última iteração do loop
@@ -214,57 +220,68 @@ int main() {
             if (event.type == sf::Event::Closed)
                 window.close();
 
-            // tecla pressionada
-            if (!jogoFinalizado && event.type == sf::Event::KeyPressed) {
-               if (event.key.code == sf::Keyboard::Left)
-                  pac = pac_left;
-               if (event.key.code == sf::Keyboard::Left && mapa [posy][posx-1] != '1'){
-                  posx--;   // left key: move o PacMan para esquerda
-                  moveesquerda = true;
-                  if(mapa[posy][posx] == '2'){
-                     mapa[posy][posx] = '0';
-                     contadorPedra++;
-                     std::cout << "Comidas: " << contadorPedra << std::endl;
-                     if(contadorPedra == totalPedras)
-                        jogoFinalizado = true;
-                  }
+            if (!jogoFinalizado && event.type == sf::Event::KeyPressed) { // se o jogo nao estiver finalizado e houver alguma tecla pressionada
+               if (event.key.code == sf::Keyboard::Left) { // se for a tecla para esquerda
+                  direcaoAtual = ESQUERDA; // direcao muda 
+                  pac = pac_left; // sprite muda com base na direcao nova 
                }
-               else if (event.key.code == sf::Keyboard::Right && mapa [posy] [posx+1] !='1'){
-                  pac = pac_right; 
-                  posx++;   // right key: move o PacMan para direita
-                  moveesquerda = false;
-                  if(mapa[posy][posx] == '2'){
-                     mapa[posy][posx] = '0';
-                     contadorPedra++;
-                     std::cout << "Comidas: " << contadorPedra << std::endl;
-                     if(contadorPedra == totalPedras)
-                        jogoFinalizado = true;
-                  }
-               }   
-               else if (event.key.code == sf::Keyboard::Up && mapa [posy-1][posx] != '1' ){
+               else if (event.key.code == sf::Keyboard::Right) {  // se for a tecla para direita
+                  direcaoAtual = DIREITA;
+                  pac = pac_right;
+               }
+               else if (event.key.code == sf::Keyboard::Up) {  // se for a tecla para cima
+                  direcaoAtual = CIMA;
                   pac = pac_up;
-                  posy--;   // up key: move o PacMan para cima  
-                  if(mapa[posy][posx] == '2'){
-                     mapa[posy][posx] = '0';
-                     contadorPedra++;
-                     std::cout << "Comidas: " << contadorPedra << std::endl;
-                     if(contadorPedra == totalPedras)
-                        jogoFinalizado = true;
-                  }
                }
-               else if (event.key.code == sf::Keyboard::Down && mapa [posy+1][posx] != '1' ){
+               else if (event.key.code == sf::Keyboard::Down) {  // se for a tecla para baixo
+                  direcaoAtual = BAIXO;
                   pac = pac_down;
-                  posy++;   // down key: move o PacMan para baixo
-                  if(mapa[posy][posx] == '2'){
-                     mapa[posy][posx] = '0';
-                     contadorPedra++;
-                     std::cout << "Comidas: " << contadorPedra << std::endl;
-                     if(contadorPedra == totalPedras)
-                        jogoFinalizado = true;
-                  }
                }
             }
         }
+
+      // a cada 0.2 segundos, atualiza a posicao automaticamente do pacman
+      if (!jogoFinalizado && clockAndar.getElapsedTime() > sf::seconds(0.1)) {
+      clockAndar.restart(); // reinicia o relogio para o próximo intervalo 
+      // move o harry conforme a direção atual, se não houver parede, ou seja '1')
+      switch (direcaoAtual) {
+         case ESQUERDA:
+               if (mapa[posy][posx-1] != '1') 
+               posx--; // move para a esquerda no mapa
+               else 
+               direcaoAtual = NENHUMA; // bateu na parede, o movimento para
+               break;
+         case DIREITA:
+               if (mapa[posy][posx+1] != '1') 
+               posx++; // move para a direita no mapa
+               else 
+               direcaoAtual = NENHUMA;
+               break;
+         case CIMA:
+               if (mapa[posy-1][posx] != '1') 
+               posy--;  // move para cima no mapa
+               else 
+               direcaoAtual = NENHUMA;
+               break;
+         case BAIXO:
+               if (mapa[posy+1][posx] != '1') 
+               posy++; // move para baixo  no mapa
+               else 
+               direcaoAtual = NENHUMA;
+               break;
+         case NENHUMA:
+               break; // não move
+      }
+
+    // verifica pedras e atualiza contador e fim de jogo
+    if (mapa[posy][posx] == '2') { // se a posição atual do harry for '2', ou seja, a uma pedra
+        mapa[posy][posx] = '0'; // atualiza e retira a pedra 
+        contadorPedra++; // soma a quantidade de pedras coletada 
+        std::cout << "Comidas: " << contadorPedra << std::endl; 
+        if (contadorPedra == totalPedras)  // se o numero de pedras coletadas for igual a quantidade total do mapa
+            jogoFinalizado = true; // a situacao do jogo muda e finaliza o jogo
+    }
+}
 
     //(teletransporte do pac de um lado para outo)
     if (posx < 0) posx = 27;     
