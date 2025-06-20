@@ -123,7 +123,7 @@ int main() {
    // Inicia a direçao seja nenhuma, ou seja, neutra e parada
    Direcao direcaoAtual = NENHUMA;
 
-    sf::RenderWindow window(sf::VideoMode(980, 1085), "Potter-Man");
+    sf::RenderWindow window(sf::VideoMode(980, 1085), "Pac-Wizard: A cacada em Hogwarts");
 
     // shape da parede
     sf::RectangleShape rectangle(sf::Vector2f(SIZE, SIZE));
