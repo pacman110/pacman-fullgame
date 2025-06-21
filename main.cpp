@@ -130,7 +130,7 @@ int main() {
     rectangle.setFillColor(sf::Color(0, 255, 255));
     rectangle.setOutlineThickness(-5);
     rectangle.setOutlineColor(sf::Color(50, 50, 50));
-
+   
    // Criando os sprites do Harry em todas posições possiveis
    sf::Sprite pac, pac_up, pac_down, pac_left, pac_right;
    definePacman(pac, pac_up, pac_down, pac_left, pac_right);
