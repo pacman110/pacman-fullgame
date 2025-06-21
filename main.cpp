@@ -118,8 +118,8 @@ bool podeMover(int x, int y) {                                        // Verific
 // Verifica se o movimento é válido para fantasmas (impede reentrada na jaula
 
 bool podeMoverGhost(int x, int y) {
-    // Impede retorno à jaula (linhas 13 a 15, colunas 11 a 15)
-    if ((y >= 13 && y <= 15) && (x >= 11 && x <= 15)) {
+    // Impede retorno à jaula (linhas 12 a 15, colunas 11 a 15)
+    if ((y >= 12 && y <= 15) && (x >= 11 && x <= 15)) {
         return false;
     }
 
@@ -133,7 +133,7 @@ bool podeMoverGhost(int x, int y) {
 // Libera fantasma da jaula seguindo um caminho até (13, 11) e depois sobe
 void soltarGhost(bool &preso, sf::Clock &clock, float atraso,
                  double &x, double &y, sf::Sprite &sprite, sf::Sprite &sprite_up,
-                 double destinoX = 13, double destinoY = 11) {
+                 double destinoX = 13, double destinoY = 10) {
     if (!preso) return;
 
     if (clock.getElapsedTime().asSeconds() > atraso) {
@@ -318,10 +318,10 @@ int main() {
     // ------------------- Liberação dos fantasmas da jaula -------------------
 // Chama a função soltarGhost para cada fantasma, que vai movê-los da jaula
 
-soltarGhost(ghost1Preso, clockGhost1, 1.0f, ghost1X, ghost1Y, ghost1, ghost1_up, 13, 11);
-soltarGhost(ghost2Preso, clockGhost2, 1.0f, ghost2X, ghost2Y, ghost2, ghost2_up, 13, 11);
-soltarGhost(ghost3Preso, clockGhost3, 1.0f, ghost3X, ghost3Y, ghost3, ghost3_up, 13, 11);
-soltarGhost(ghost4Preso, clockGhost4, 1.0f, ghost4X, ghost4Y, ghost4, ghost4_up, 13, 11);
+soltarGhost(ghost1Preso, clockGhost1, 1.0f, ghost1X, ghost1Y, ghost1, ghost1_up, 13, 10);
+soltarGhost(ghost2Preso, clockGhost2, 1.0f, ghost2X, ghost2Y, ghost2, ghost2_up, 13, 10);
+soltarGhost(ghost3Preso, clockGhost3, 1.0f, ghost3X, ghost3Y, ghost3, ghost3_up, 13, 10);
+soltarGhost(ghost4Preso, clockGhost4, 1.0f, ghost4X, ghost4Y, ghost4, ghost4_up, 13, 10);
   
 
 // ------------------- Movimento dos fantasmas -------------------
@@ -329,7 +329,7 @@ soltarGhost(ghost4Preso, clockGhost4, 1.0f, ghost4X, ghost4Y, ghost4, ghost4_up,
 
 // Movimento aleatório do ghost1
 if (!ghost1Preso) {
-    if (clockGhost1.getElapsedTime().asSeconds() > 0.1f) { // controla a velocidade do movimento
+    if (clockGhost1.getElapsedTime().asSeconds() > 0.2f) { // controla a velocidade do movimento
         int dx[] = {0, 0, -1, 1};   // deslocamentos para cima, baixo, esquerda e direita
         int dy[] = {-1, 1, 0, 0};
 
@@ -355,7 +355,7 @@ if (!ghost1Preso) {
 
 // Movimento aleatório do ghost2 (igual ao ghost1)
 if (!ghost2Preso) {
-    if (clockGhost2.getElapsedTime().asSeconds() > 0.1f) {
+    if (clockGhost2.getElapsedTime().asSeconds() > 0.2f) {
         int dx[] = {0, 0, -1, 1};
         int dy[] = {-1, 1, 0, 0};
 
@@ -381,7 +381,7 @@ if (!ghost2Preso) {
 // Movimento perseguidor do ghost3
 // Prioriza se aproximar do Pacman no eixo X, depois no eixo Y
 if (!ghost3Preso) {
-    if (clockGhost3.getElapsedTime().asSeconds() > 0.1f) {
+    if (clockGhost3.getElapsedTime().asSeconds() > 0.2f) {
         int dx = 0, dy = 0;
 
        if ((int)ghost3X < posx && podeMoverGhost((int)ghost3X + 1, (int)ghost3Y)) dx = 1;
@@ -406,7 +406,7 @@ if (!ghost3Preso) {
 // Movimento perseguidor do ghost4
 // Prioriza se aproximar do Pacman no eixo Y, depois no eixo X
 if (!ghost4Preso) {
-    if (clockGhost4.getElapsedTime().asSeconds() > 0.1) {
+    if (clockGhost4.getElapsedTime().asSeconds() > 0.2) {
         int dx = 0, dy = 0;
 
        if ((int)ghost4Y < posy && podeMoverGhost((int)ghost4X, (int)ghost4Y + 1)) dy = 1;
