@@ -329,7 +329,7 @@ soltarGhost(ghost4Preso, clockGhost4, 1.0f, ghost4X, ghost4Y, ghost4, ghost4_up,
 
 // Movimento aleatório do ghost1
 if (!ghost1Preso) {
-    if (clockGhost1.getElapsedTime().asSeconds() > 0.2f) { // controla a velocidade do movimento
+    if (clockGhost1.getElapsedTime().asSeconds() > 0.1f) { // controla a velocidade do movimento
         int dx[] = {0, 0, -1, 1};   // deslocamentos para cima, baixo, esquerda e direita
         int dy[] = {-1, 1, 0, 0};
 
@@ -355,7 +355,7 @@ if (!ghost1Preso) {
 
 // Movimento aleatório do ghost2 (igual ao ghost1)
 if (!ghost2Preso) {
-    if (clockGhost2.getElapsedTime().asSeconds() > 0.2f) {
+    if (clockGhost2.getElapsedTime().asSeconds() > 0.1f) {
         int dx[] = {0, 0, -1, 1};
         int dy[] = {-1, 1, 0, 0};
 
@@ -381,7 +381,7 @@ if (!ghost2Preso) {
 // Movimento perseguidor do ghost3
 // Prioriza se aproximar do Pacman no eixo X, depois no eixo Y
 if (!ghost3Preso) {
-    if (clockGhost3.getElapsedTime().asSeconds() > 0.2f) {
+    if (clockGhost3.getElapsedTime().asSeconds() > 0.3f) {
         int dx = 0, dy = 0;
 
        if ((int)ghost3X < posx && podeMoverGhost((int)ghost3X + 1, (int)ghost3Y)) dx = 1;
@@ -406,7 +406,7 @@ if (!ghost3Preso) {
 // Movimento perseguidor do ghost4
 // Prioriza se aproximar do Pacman no eixo Y, depois no eixo X
 if (!ghost4Preso) {
-    if (clockGhost4.getElapsedTime().asSeconds() > 0.2) {
+    if (clockGhost4.getElapsedTime().asSeconds() > 0.3) {
         int dx = 0, dy = 0;
 
        if ((int)ghost4Y < posy && podeMoverGhost((int)ghost4X, (int)ghost4Y + 1)) dy = 1;
