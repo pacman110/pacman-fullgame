@@ -102,10 +102,12 @@ void definePacman(sf::Sprite &pac,
                   sf::Sprite &pac_right);
 
 // Define sprites dos fantasmas
-void defineGhost(sf::Sprite &ghost1, sf::Sprite &ghost1_left, sf::Sprite &ghost1_up, sf::Sprite &ghost1_down,
-               sf::Sprite &ghost2, sf::Sprite &ghost2_left, sf::Sprite &ghost2_up, sf::Sprite &ghost2_down,
-               sf::Sprite &ghost3, sf::Sprite &ghost3_left, sf::Sprite &ghost3_up, sf::Sprite &ghost3_down,
-               sf::Sprite &ghost4, sf::Sprite &ghost4_left, sf::Sprite &ghost4_up, sf::Sprite &ghost4_down);
+void defineGhost(
+    sf::Sprite &ghost1, sf::Sprite &ghost1_left, sf::Sprite &ghost1_up, sf::Sprite &ghost1_down, sf::Sprite &ghost1_right,
+    sf::Sprite &ghost2, sf::Sprite &ghost2_left, sf::Sprite &ghost2_up, sf::Sprite &ghost2_down, sf::Sprite &ghost2_right,
+    sf::Sprite &ghost3, sf::Sprite &ghost3_left, sf::Sprite &ghost3_up, sf::Sprite &ghost3_down, sf::Sprite &ghost3_right,
+    sf::Sprite &ghost4, sf::Sprite &ghost4_left, sf::Sprite &ghost4_up, sf::Sprite &ghost4_down, sf::Sprite &ghost4_right);
+
 
 // Função que verifica se uma coordenada (x, y) é válida para movimentação
 // Retorna true se for dentro dos limites do mapa e não for parede
@@ -113,7 +115,41 @@ bool podeMover(int x, int y) {                                        // Verific
    return x >= 0 && x < 29 && y >= 0 && y < 31 && mapa[y][x] != '1';  // Verifica se y está entre 0 e 30 (linhas válidas do mapa)
 }                                                                     // Verifica se o caractere naquela posição não é '1' (parede)
 
+// Verifica se o movimento é válido para fantasmas (impede reentrada na jaula
 
+bool podeMoverGhost(int x, int y) {
+    // Impede retorno à jaula (linhas 12 a 15, colunas 11 a 15)
+    if ((y >= 12 && y <= 15) && (x >= 11 && x <= 15)) {
+        return false;
+    }
+
+    // Impede entrada pela abertura da jaula (linha 12, coluna 13)
+    if (y == 12 && x == 13) {
+        return false;
+    }
+
+    return x >= 0 && x < 29 && y >= 0 && y < 31 && mapa[y][x] != '1';
+}
+// Libera fantasma da jaula seguindo um caminho até (13, 11) e depois sobe
+void soltarGhost(bool &preso, sf::Clock &clock, float atraso,
+                 double &x, double &y, sf::Sprite &sprite, sf::Sprite &sprite_up,
+                 double destinoX = 13, double destinoY = 10) {
+    if (!preso) return;
+
+    if (clock.getElapsedTime().asSeconds() > atraso) {
+        if ((int)y > destinoY && podeMover((int)x, (int)y - 1)) {
+            y -= 1;
+            sprite = sprite_up;
+        } else if ((int)x < destinoX && podeMover((int)x + 1, (int)y)) {
+            x += 1;
+        } else if ((int)x > destinoX && podeMover((int)x - 1, (int)y)) {
+            x -= 1;
+        } else {
+            preso = false;
+        }
+        clock.restart();
+    }
+}
 
 int main() {
    int totalPedras = 0;
@@ -144,27 +180,31 @@ int main() {
     sf::Sprite ghost1_left;
     sf::Sprite ghost1_up;
     sf::Sprite ghost1_down;
+    sf::Sprite ghost1_right;
 
     sf::Sprite ghost2;        //  Criando objeto sprite ghost2
     sf::Sprite ghost2_left;
     sf::Sprite ghost2_up;
     sf::Sprite ghost2_down;
+    sf::Sprite ghost2_right;
 
     sf::Sprite ghost3;        //  Criando objeto sprite ghost3
     sf::Sprite ghost3_left;
     sf::Sprite ghost3_up;
     sf::Sprite ghost3_down;
+    sf::Sprite ghost3_right;
 
     sf::Sprite ghost4;        //  Criando objeto sprite ghost4
     sf::Sprite ghost4_left;
     sf::Sprite ghost4_up;
     sf::Sprite ghost4_down;
+    sf::Sprite ghost4_right;
 
     // Função para definir o sprite dos dementadores
-    defineGhost(ghost1, ghost1_left, ghost1_up, ghost1_down,
-               ghost2, ghost2_left, ghost2_up, ghost2_down,
-               ghost3, ghost3_left, ghost3_up, ghost3_down,
-               ghost4, ghost4_left, ghost4_up, ghost4_down);
+    defineGhost(ghost1, ghost1_left, ghost1_up, ghost1_down, ghost1_right,
+               ghost2, ghost2_left, ghost2_up, ghost2_down, ghost2_right,
+               ghost3, ghost3_left, ghost3_up, ghost3_down, ghost3_right,
+               ghost4, ghost4_left, ghost4_up, ghost4_down, ghost4_right);
  
    sf::Sprite spriteFundo; // Criando objeto sprite fundo
    sf::Sprite spriteParede; // Criando objeto sprite fund
@@ -275,180 +315,121 @@ int main() {
     if (posx < 0) posx = 27;     
     if (posx > 27) posx = 0; 
 
-    //Movimento Ghost1 aleatório//
-    
-    // Movimento ghost1: aleatório com atraso de 1s
-    if (ghost1Preso) {
-       if (clockGhost1.getElapsedTime().asSeconds() > 1.0f && podeMover(ghost1X, ghost1Y - 1)) {
-          ghost1Y -= 1;
-          ghost1 = ghost1_up;
-          if ((int)ghost1Y < 13) ghost1Preso = false;
-             clockGhost1.restart();
-       }
-    } 
-    else {
-    // Verifica se já passou 0.2 segundos desde o último movimento do fantasma 1
-    if (clockGhost1.getElapsedTime().asSeconds() > 0.2f) {
-    // Define deslocamentos para cima, baixo, esquerda e direita
-       int dx[] = {0, 0, -1, 1};    // variação em X para cada direção
-       int dy[] = {-1, 1, 0, 0};    // variação em Y para cada direção
+    // ------------------- Liberação dos fantasmas da jaula -------------------
+// Chama a função soltarGhost para cada fantasma, que vai movê-los da jaula
 
-    // Sorteia uma direção aleatória entre 0 e 3
-       int novaDirecao = rand() % 4;
+soltarGhost(ghost1Preso, clockGhost1, 1.0f, ghost1X, ghost1Y, ghost1, ghost1_up, 13, 10);
+soltarGhost(ghost2Preso, clockGhost2, 1.0f, ghost2X, ghost2Y, ghost2, ghost2_up, 13, 10);
+soltarGhost(ghost3Preso, clockGhost3, 1.0f, ghost3X, ghost3Y, ghost3, ghost3_up, 13, 10);
+soltarGhost(ghost4Preso, clockGhost4, 1.0f, ghost4X, ghost4Y, ghost4, ghost4_up, 13, 10);
+  
 
-    // Calcula posição tentativa com base na direção sorteada
-       int proxX = ghost1X + dx[novaDirecao];
-       int proxY = ghost1Y + dy[novaDirecao];
+// ------------------- Movimento dos fantasmas -------------------
+// Só movemos cada fantasma se ele já tiver sido liberado da jaula (ghostXPreso == false).
 
-    // Verifica se a nova posição não é uma parede
-       if (podeMover(proxX, proxY)) {
-        // Atualiza posição se for possível
-           ghost1X = proxX;
-           ghost1Y = proxY;
-           // muda o sprite conforme a direção sorteada
-          if (novaDirecao == 0) ghost1 = ghost1_up;
-          else if (novaDirecao == 1) ghost1 = ghost1_down;
-          else if (novaDirecao == 2) ghost1 = ghost1_left;
-        // direita (novaDirecao == 3): mantém sprite padrão ghost1
-       }
-    // Reinicia o relógio do fantasma 1 para contar novo intervalo
-    clockGhost1.restart();
+// Movimento aleatório do ghost1
+if (!ghost1Preso) {
+    if (clockGhost1.getElapsedTime().asSeconds() > 0.2f) { // controla a velocidade do movimento
+        int dx[] = {0, 0, -1, 1};   // deslocamentos para cima, baixo, esquerda e direita
+        int dy[] = {-1, 1, 0, 0};
+
+        int novaDirecao = rand() % 4;  // escolhe aleatoriamente uma direção
+
+        int proxX = (int)ghost1X + dx[novaDirecao];
+        int proxY = (int)ghost1Y + dy[novaDirecao];
+
+        // Verifica se o movimento é possível (não é parede)
+        if (podeMoverGhost(proxX, proxY)) {
+            ghost1X = proxX;
+            ghost1Y = proxY;
+
+            // Atualiza o sprite para refletir a direção do movimento
+            if (novaDirecao == 0) ghost1 = ghost1_up;
+            else if (novaDirecao == 1) ghost1 = ghost1_down;
+            else if (novaDirecao == 2) ghost1 = ghost1_left;
+            else if (novaDirecao == 3) ghost1 = ghost1_right;
+        }
+        clockGhost1.restart();  // reinicia o relógio para próximo movimento
     }
-    }
+}
 
-    //Movimento Ghost2 aleatório
-    
-    // Movimento ghost2: aleatório com atraso de 2s
-    if (ghost1Preso) {
-       if (clockGhost2.getElapsedTime().asSeconds() > 1.0f && podeMover(ghost2X, ghost2Y - 1)) {
-          ghost2Y -= 1;
-          ghost2 = ghost2_up;
-          if ((int)ghost2Y < 13) ghost1Preso = false;
-             clockGhost2.restart();
-       }
-    } 
-    else {
-    // Verifica se já passou 0.2 segundos desde o último movimento do fantasma 1
+// Movimento aleatório do ghost2 (igual ao ghost1)
+if (!ghost2Preso) {
     if (clockGhost2.getElapsedTime().asSeconds() > 0.2f) {
-    // Define deslocamentos para cima, baixo, esquerda e direita
-       int dx[] = {0, 0, -1, 1};    // variação em X para cada direção
-       int dy[] = {-1, 1, 0, 0};    // variação em Y para cada direção
+        int dx[] = {0, 0, -1, 1};
+        int dy[] = {-1, 1, 0, 0};
 
-    // Sorteia uma direção aleatória entre 0 e 3
-       int novaDirecao = rand() % 4;
+        int novaDirecao = rand() % 4;
 
-    // Calcula posição tentativa com base na direção sorteada
-       int proxX = ghost2X + dx[novaDirecao];
-       int proxY = ghost2Y + dy[novaDirecao];
+        int proxX = (int)ghost2X + dx[novaDirecao];
+        int proxY = (int)ghost2Y + dy[novaDirecao];
 
-    // Verifica se a nova posição não é uma parede
-       if (podeMover(proxX, proxY)) {
-        // Atualiza posição se for possível
-           ghost2X = proxX;
-           ghost2Y = proxY;
+        if (podeMoverGhost(proxX, proxY)) {
+            ghost2X = proxX;
+            ghost2Y = proxY;
 
-        // muda o sprite conforme a direção sorteada
            if (novaDirecao == 0) ghost2 = ghost2_up;
            else if (novaDirecao == 1) ghost2 = ghost2_down;
            else if (novaDirecao == 2) ghost2 = ghost2_left;
-        // direita (novaDirecao == 3): mantém sprite padrão ghost2
-       }
+           else if (novaDirecao == 3) ghost2 = ghost2_right;
 
-    // Reinicia o relógio do fantasma 1 para contar novo intervalo
-    clockGhost2.restart();
+        }
+        clockGhost2.restart();
     }
 }
 
-    //Movimento Ghost3 persegue pac priorizando primeiro x e depois y
-    
-    //Movimento ghost3: persegue (X depois Y), com atraso de 3s
-    if (ghost3Preso) {
-       if (clockGhost3.getElapsedTime().asSeconds() > 3.0f && podeMover(ghost3X, ghost3Y - 1)) {
-          ghost3Y -= 1;
-          ghost3 = ghost3_up;
-          if ((int)ghost3Y < 13) ghost3Preso = false;
-             clockGhost3.restart();
-    }
-    } else {
-    // Verifica se já passou 0.2 segundos desde o último movimento do fantasma 1
+// Movimento perseguidor do ghost3
+// Prioriza se aproximar do Pacman no eixo X, depois no eixo Y
+if (!ghost3Preso) {
     if (clockGhost3.getElapsedTime().asSeconds() > 0.2f) {
-    // Inicializa deslocamentos em zero
-       int dx = 0;
-       int dy = 0;
+        int dx = 0, dy = 0;
 
-    // Tenta alinhar primeiro no eixo X
-       if ((int)ghost3X < posx && podeMover(ghost3X + 1, ghost3Y)) {
-          dx = 1;  // move para direita
-       }
-       else if ((int)ghost3X > posx && podeMover(ghost3X - 1, ghost3Y)) {
-          dx = -1; // move para esquerda
-       }
-    // Se já estiver alinhado no X, tenta no Y
-       else if ((int)ghost3Y < posy && podeMover(ghost3X, ghost3Y + 1)) {
-          dy = 1;  // move para baixo
-       }
-       else if ((int)ghost3Y > posy && podeMover(ghost3X, ghost3Y - 1)) {
-       dy = -1; // move para cima
-       }
+       if ((int)ghost3X < posx && podeMoverGhost((int)ghost3X + 1, (int)ghost3Y)) dx = 1;
+       else if ((int)ghost3X > posx && podeMoverGhost((int)ghost3X - 1, (int)ghost3Y)) dx = -1;
+       else if ((int)ghost3Y < posy && podeMoverGhost((int)ghost3X, (int)ghost3Y + 1)) dy = 1;
+       else if ((int)ghost3Y > posy && podeMoverGhost((int)ghost3X, (int)ghost3Y - 1)) dy = -1;
 
-       // atualiza sprite conforme direção
-        if (dx == -1) ghost3 = ghost3_left;
-        else if (dx == 1) /* direita */ ; // sprite padrão
-        else if (dy == 1) ghost3 = ghost3_down;
-        else if (dy == -1) ghost3 = ghost3_up;
 
-    // Aplica movimento
-       ghost3X += dx;
-       ghost3Y += dy;
+        // Atualiza sprite de acordo com direção do movimento
+       if (dx == -1) ghost3 = ghost3_left;
+       else if (dx == 1) ghost3 = ghost3_right; // direita mantém o sprite padrão
+       else if (dy == 1) ghost3 = ghost3_down;
+       else if (dy == -1) ghost3 = ghost3_up;
 
-       clockGhost3.restart();
+        ghost3X += dx;
+        ghost3Y += dy;
+
+        clockGhost3.restart();
     }
 }
 
-    //Movimento Ghost4 persegue pac priorizando primeiro y e depois x
-    
-    if (ghost4Preso) {
-       if (clockGhost4.getElapsedTime().asSeconds() > 4.0f && podeMover(ghost4X, ghost4Y - 1)) {
-          ghost4Y -= 1;
-          ghost4 = ghost4_up;
-          if ((int)ghost4Y < 13) ghost4Preso = false;
-           clockGhost4.restart();
-    }
-    } else {
-    // Verifica se já passou 0.2 segundos desde o último movimento do fantasma 4
+// Movimento perseguidor do ghost4
+// Prioriza se aproximar do Pacman no eixo Y, depois no eixo X
+if (!ghost4Preso) {
+    if (clockGhost4.getElapsedTime().asSeconds() > 0.2) {
+        int dx = 0, dy = 0;
 
-    if (clockGhost4.getElapsedTime().asSeconds() > 0.2f) {
-       int dx = 0;
-       int dy = 0;
+       if ((int)ghost4Y < posy && podeMoverGhost((int)ghost4X, (int)ghost4Y + 1)) dy = 1;
+       else if ((int)ghost4Y > posy && podeMoverGhost((int)ghost4X, (int)ghost4Y - 1)) dy = -1;
+       else if ((int)ghost4X < posx && podeMoverGhost((int)ghost4X + 1, (int)ghost4Y)) dx = 1;
+       else if ((int)ghost4X > posx && podeMoverGhost((int)ghost4X - 1, (int)ghost4Y)) dx = -1;
 
-    // Tenta alinhar primeiro no eixo Y
-       if ((int)ghost4Y < posy && podeMover(ghost4X, ghost4Y + 1)) {
-          dy = 1;  // move para baixo
-       }
-       else if ((int)ghost4Y > posy && podeMover(ghost4X, ghost4Y - 1)) {
-          dy = -1; // move para cima
-       }
-    // Se já estiver alinhado no Y, tenta no X
-       else if ((int)ghost4X < posx && podeMover(ghost4X + 1, ghost4Y)) {
-          dx = 1;  // move para direita
-       }
-       else if ((int)ghost4X > posx && podeMover(ghost4X - 1, ghost4Y)) {
-          dx = -1; // move para esquerda
-       }
-
-       // atualiza sprite conforme direção
+        // Atualiza sprite conforme direção
         if (dx == -1) ghost4 = ghost4_left;
-        else if (dx == 1) /* direita */ ; // sprite padrão
+        else if (dx == 1) ghost4 = ghost4_right;
         else if (dy == 1) ghost4 = ghost4_down;
         else if (dy == -1) ghost4 = ghost4_up;
 
-       ghost4X += dx;
-       ghost4Y += dy;
 
-       clockGhost4.restart();
+
+        ghost4X += dx;
+        ghost4Y += dy;
+
+        clockGhost4.restart();
     }
-    
 }
+
+
   
 
    // CONTEUDO DE TEXTO 
@@ -645,10 +626,11 @@ void definePacman(sf::Sprite &pac,
    pac_right.setScale(1.3f, 1.3f);
    
 }
-void defineGhost(sf::Sprite &ghost1, sf::Sprite &ghost1_left, sf::Sprite &ghost1_up, sf::Sprite &ghost1_down,
-               sf::Sprite &ghost2, sf::Sprite &ghost2_left, sf::Sprite &ghost2_up, sf::Sprite &ghost2_down,
-               sf::Sprite &ghost3, sf::Sprite &ghost3_left, sf::Sprite &ghost3_up, sf::Sprite &ghost3_down,
-               sf::Sprite &ghost4, sf::Sprite &ghost4_left, sf::Sprite &ghost4_up, sf::Sprite &ghost4_down) {
+void defineGhost(
+    sf::Sprite &ghost1, sf::Sprite &ghost1_left, sf::Sprite &ghost1_up, sf::Sprite &ghost1_down, sf::Sprite &ghost1_right,
+    sf::Sprite &ghost2, sf::Sprite &ghost2_left, sf::Sprite &ghost2_up, sf::Sprite &ghost2_down, sf::Sprite &ghost2_right,
+    sf::Sprite &ghost3, sf::Sprite &ghost3_left, sf::Sprite &ghost3_up, sf::Sprite &ghost3_down, sf::Sprite &ghost3_right,
+    sf::Sprite &ghost4, sf::Sprite &ghost4_left, sf::Sprite &ghost4_up, sf::Sprite &ghost4_down, sf::Sprite &ghost4_right){
 
 
          // Sprites dos dementadores (ghost) - Textura
@@ -665,6 +647,17 @@ void defineGhost(sf::Sprite &ghost1, sf::Sprite &ghost1_left, sf::Sprite &ghost1
       ghost1.setTexture(texturaGhost1); // Define textura no sprite
       ghost1.setOrigin(tamanhoGhost1.x / 2.0f, tamanhoGhost1.y / 2.0f); //  Origem no centro
       ghost1.setScale(1.3f, 1.3f); //  Escala da imagem
+
+      //Ghost1_right
+
+      static sf::Texture texturaGhost1_right; // Criando textura para movimento para a direita
+      if (!texturaGhost1_right.loadFromFile("resources/ghost1_right.png")) {
+      std::cout << "Erro lendo imagem ghost1_right.png\n";
+      }
+      static sf::Vector2u tamanhoGhost1_right = texturaGhost1_right.getSize(); // Pega o tamanho real
+      ghost1_right.setTexture(texturaGhost1_right); // Define textura
+      ghost1_right.setOrigin(tamanhoGhost1_right.x / 2.0f, tamanhoGhost1_right.y / 2.0f); // Origem no centro
+      ghost1_right.setScale(1.3f, 1.3f); // Escala
 
       //Ghost1_left
 
@@ -714,6 +707,17 @@ void defineGhost(sf::Sprite &ghost1, sf::Sprite &ghost1_left, sf::Sprite &ghost1
       ghost2.setOrigin(tamanhoGhost2.x / 2.0f, tamanhoGhost2.y / 2.0f); //  Origem no centro
       ghost2.setScale(1.3f, 1.3f); //  Escala
 
+       //Ghost2_right
+
+      static sf::Texture texturaGhost2_right; // Criando textura para movimento para a direita
+      if (!texturaGhost2_right.loadFromFile("resources/ghost2_right.png")) {
+      std::cout << "Erro lendo imagem ghost2_right.png\n";
+      }
+      static sf::Vector2u tamanhoGhost2_right = texturaGhost2_right.getSize(); // Pega o tamanho real
+      ghost2_right.setTexture(texturaGhost2_right); // Define textura
+      ghost2_right.setOrigin(tamanhoGhost2_right.x / 2.0f, tamanhoGhost2_right.y / 2.0f); // Origem no centro
+      ghost2_right.setScale(1.3f, 1.3f); // Escala
+
       //Ghost2_left
 
       static sf::Texture texturaGhost2_left;
@@ -757,6 +761,16 @@ void defineGhost(sf::Sprite &ghost1, sf::Sprite &ghost1_left, sf::Sprite &ghost1
       ghost3.setTexture(texturaGhost3); //  Define textura no sprite ghost3
       ghost3.setOrigin(tamanhoGhost3.x / 2.0f, tamanhoGhost3.y / 2.0f); //  Define origem no centro
       ghost3.setScale(1.3f, 1.3f); //  Aplica escala no sprite
+      //Ghost3_right
+
+      static sf::Texture texturaGhost3_right; // Criando textura para movimento para a direita
+      if (!texturaGhost3_right.loadFromFile("resources/ghost3_right.png")) {
+      std::cout << "Erro lendo imagem ghost3_right.png\n"; // Mensagem de erro
+      }
+      static sf::Vector2u tamanhoGhost3_right = texturaGhost3_right.getSize(); // Pega o tamanho real da imagem
+      ghost3_right.setTexture(texturaGhost3_right); // Define textura no sprite ghost3_right
+      ghost3_right.setOrigin(tamanhoGhost3_right.x / 2.0f, tamanhoGhost3_right.y / 2.0f); // Define origem no centro
+      ghost3_right.setScale(1.3f, 1.3f); // Aplica escala no sprite
 
       //Ghost3_left
 
@@ -801,6 +815,17 @@ void defineGhost(sf::Sprite &ghost1, sf::Sprite &ghost1_left, sf::Sprite &ghost1
       ghost4.setTexture(texturaGhost4); //  Define textura no sprite ghost4
       ghost4.setOrigin(tamanhoGhost4.x / 2.0f, tamanhoGhost4.y / 2.0f); //  Define origem no centro
       ghost4.setScale(1.3f, 1.3f); //  Aplica escala no sprite
+
+      //Ghost4_right
+
+      static sf::Texture texturaGhost4_right; // Criando textura para movimento para a direita
+      if (!texturaGhost4_right.loadFromFile("resources/ghost4_right.png")) {
+      std::cout << "Erro lendo imagem ghost4_right.png\n"; // Mensagem de erro
+      }
+      static sf::Vector2u tamanhoGhost4_right = texturaGhost4_right.getSize(); // Pega o tamanho real da imagem
+      ghost4_right.setTexture(texturaGhost4_right); // Define textura no sprite ghost4_right
+      ghost4_right.setOrigin(tamanhoGhost4_right.x / 2.0f, tamanhoGhost4_right.y / 2.0f); // Define origem no centro
+      ghost4_right.setScale(1.3f, 1.3f); // Aplica escala no sprite
 
       //Ghost4_left
 
