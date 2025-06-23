@@ -74,6 +74,9 @@ int dirGhost2 = 1; // em baixo
 int dirGhost3 = 2; // a esquerda
 int dirGhost4 = 3; // a direita
 
+int ultimaDirecaoGhost1 = -1; // Guarda a última direção válida de ghost para evitar voltar
+int ultimaDirecaoGhost2 = -1; 
+
 // Clocks para controlar tempo de movimento dos fantasmas
 sf::Clock clockGhost1;
 sf::Clock clockGhost2;
@@ -324,59 +327,108 @@ soltarGhost(ghost3Preso, clockGhost3, 1.0f, ghost3X, ghost3Y, ghost3, ghost3_up,
 soltarGhost(ghost4Preso, clockGhost4, 1.0f, ghost4X, ghost4Y, ghost4, ghost4_up, 13, 10);
   
 
-// ------------------- Movimento dos fantasmas -------------------
+// Movimento dos fantasmas 
 // Só movemos cada fantasma se ele já tiver sido liberado da jaula (ghostXPreso == false).
 
 // Movimento aleatório do ghost1
+
 if (!ghost1Preso) {
-    if (clockGhost1.getElapsedTime().asSeconds() > 0.1f) { // controla a velocidade do movimento
-        int dx[] = {0, 0, -1, 1};   // deslocamentos para cima, baixo, esquerda e direita
+    if (clockGhost1.getElapsedTime().asSeconds() > 0.1f) {
+
+        // Vetores de deslocamento para cima, baixo, esquerda e direita
+        int dx[] = {0, 0, -1, 1};
         int dy[] = {-1, 1, 0, 0};
 
-        int novaDirecao = rand() % 4;  // escolhe aleatoriamente uma direção
+        bool moveu = false; // Flag para saber se o fantasma conseguiu se mover
 
-        int proxX = (int)ghost1X + dx[novaDirecao];
-        int proxY = (int)ghost1Y + dy[novaDirecao];
+        for (int tentativas = 0; tentativas < 4 && !moveu; tentativas++) {
+            int dir = rand() % 4; // Sorteia uma direção aleatória
 
-        // Verifica se o movimento é possível (não é parede)
-        if (podeMoverGhost(proxX, proxY)) {
-            ghost1X = proxX;
-            ghost1Y = proxY;
+            // Evita retornar para a direção oposta da anterior
+            if ((dir == 0 && ultimaDirecaoGhost1 == 1) || // cima - baixo
+                (dir == 1 && ultimaDirecaoGhost1 == 0) ||
+                (dir == 2 && ultimaDirecaoGhost1 == 3) || // esquerda - direita
+                (dir == 3 && ultimaDirecaoGhost1 == 2)) {
+                continue;
+            }
 
-            // Atualiza o sprite para refletir a direção do movimento
-            if (novaDirecao == 0) ghost1 = ghost1_up;
-            else if (novaDirecao == 1) ghost1 = ghost1_down;
-            else if (novaDirecao == 2) ghost1 = ghost1_left;
-            else if (novaDirecao == 3) ghost1 = ghost1_right;
+            int proxX = (int)ghost1X + dx[dir];
+            int proxY = (int)ghost1Y + dy[dir];
+
+            // Se a próxima posição for válida, realiza o movimento
+            if (podeMoverGhost(proxX, proxY)) {
+                ghost1X = proxX;
+                ghost1Y = proxY;
+
+                // Atualiza o sprite conforme a direção
+                if (dir == 0) ghost1 = ghost1_up;
+                else if (dir == 1) ghost1 = ghost1_down;
+                else if (dir == 2) ghost1 = ghost1_left;
+                else if (dir == 3) ghost1 = ghost1_right;
+
+                ultimaDirecaoGhost1 = dir; // Salva a última direção usada
+                moveu = true;
+            }
+
         }
-        clockGhost1.restart();  // reinicia o relógio para próximo movimento
+
+        clockGhost1.restart(); // Reinicia o relógio para próximo movimento
     }
+
+// TELETRANSPORTE para ghost1 
+if ((int)ghost1X <= 0) ghost1X = 26;
+if ((int)ghost1X >= 27) ghost1X = 1;
 }
+   
 
 // Movimento aleatório do ghost2 (igual ao ghost1)
 if (!ghost2Preso) {
     if (clockGhost2.getElapsedTime().asSeconds() > 0.1f) {
+
+        // Vetores de deslocamento para cima, baixo, esquerda e direita
         int dx[] = {0, 0, -1, 1};
         int dy[] = {-1, 1, 0, 0};
 
-        int novaDirecao = rand() % 4;
+        bool moveu = false; // Flag para saber se o fantasma conseguiu se mover
 
-        int proxX = (int)ghost2X + dx[novaDirecao];
-        int proxY = (int)ghost2Y + dy[novaDirecao];
+        for (int tentativas = 0; tentativas < 4 && !moveu; tentativas++) {
+            int dir = rand() % 4; // Sorteia uma direção aleatória
 
-        if (podeMoverGhost(proxX, proxY)) {
-            ghost2X = proxX;
-            ghost2Y = proxY;
+            // Evita retornar para a direção oposta da anterior
+            if ((dir == 0 && ultimaDirecaoGhost2 == 1) || // cima - baixo
+                (dir == 1 && ultimaDirecaoGhost2 == 0) ||
+                (dir == 2 && ultimaDirecaoGhost2 == 3) || // esquerda - direita
+                (dir == 3 && ultimaDirecaoGhost2 == 2)) {
+                continue;
+            }
 
-           if (novaDirecao == 0) ghost2 = ghost2_up;
-           else if (novaDirecao == 1) ghost2 = ghost2_down;
-           else if (novaDirecao == 2) ghost2 = ghost2_left;
-           else if (novaDirecao == 3) ghost2 = ghost2_right;
+            int proxX = (int)ghost2X + dx[dir];
+            int proxY = (int)ghost2Y + dy[dir];
+
+            // Se a próxima posição for válida, realiza o movimento
+            if (podeMoverGhost(proxX, proxY)) {
+                ghost2X = proxX;
+                ghost2Y = proxY;
+
+                // Atualiza o sprite conforme a direção
+                if (dir == 0) ghost2 = ghost2_up;
+                else if (dir == 1) ghost2 = ghost2_down;
+                else if (dir == 2) ghost2 = ghost2_left;
+                else if (dir == 3) ghost2 = ghost2_right;
+
+                ultimaDirecaoGhost2 = dir; // Salva a última direção usada
+                moveu = true;
+            }
 
         }
-        clockGhost2.restart();
+
+        clockGhost2.restart(); // Reinicia o relógio para próximo movimento
     }
-}
+    // TELETRANSPORTE para ghost2
+   if ((int)ghost2X <= 0) ghost2X = 26;
+   if ((int)ghost2X >= 27) ghost2X = 1;
+
+   }
 
 // Movimento perseguidor do ghost3
 // Prioriza se aproximar do Pacman no eixo X, depois no eixo Y
@@ -384,23 +436,26 @@ if (!ghost3Preso) {
     if (clockGhost3.getElapsedTime().asSeconds() > 0.3f) {
         int dx = 0, dy = 0;
 
-       if ((int)ghost3X < posx && podeMoverGhost((int)ghost3X + 1, (int)ghost3Y)) dx = 1;
-       else if ((int)ghost3X > posx && podeMoverGhost((int)ghost3X - 1, (int)ghost3Y)) dx = -1;
-       else if ((int)ghost3Y < posy && podeMoverGhost((int)ghost3X, (int)ghost3Y + 1)) dy = 1;
-       else if ((int)ghost3Y > posy && podeMoverGhost((int)ghost3X, (int)ghost3Y - 1)) dy = -1;
-
+        if ((int)ghost3X < posx && podeMoverGhost((int)ghost3X + 1, (int)ghost3Y)) dx = 1;
+        else if ((int)ghost3X > posx && podeMoverGhost((int)ghost3X - 1, (int)ghost3Y)) dx = -1;
+        else if ((int)ghost3Y < posy && podeMoverGhost((int)ghost3X, (int)ghost3Y + 1)) dy = 1;
+        else if ((int)ghost3Y > posy && podeMoverGhost((int)ghost3X, (int)ghost3Y - 1)) dy = -1;
 
         // Atualiza sprite de acordo com direção do movimento
-       if (dx == -1) ghost3 = ghost3_left;
-       else if (dx == 1) ghost3 = ghost3_right; // direita mantém o sprite padrão
-       else if (dy == 1) ghost3 = ghost3_down;
-       else if (dy == -1) ghost3 = ghost3_up;
+        if (dx == -1) ghost3 = ghost3_left;
+        else if (dx == 1) ghost3 = ghost3_right;
+        else if (dy == 1) ghost3 = ghost3_down;
+        else if (dy == -1) ghost3 = ghost3_up;
 
         ghost3X += dx;
         ghost3Y += dy;
 
         clockGhost3.restart();
     }
+
+    // TELETRANSPORTE para ghost3 (deve ficar aqui DENTRO do if !ghost3Preso)
+    if ((int)ghost3X <= 0) ghost3X = 26;
+    if ((int)ghost3X >= 27) ghost3X = 1;
 }
 
 // Movimento perseguidor do ghost4
@@ -420,18 +475,15 @@ if (!ghost4Preso) {
         else if (dy == 1) ghost4 = ghost4_down;
         else if (dy == -1) ghost4 = ghost4_up;
 
-
-
         ghost4X += dx;
         ghost4Y += dy;
 
         clockGhost4.restart();
     }
+    // TELETRANSPORTE para ghost4
+    if ((int)ghost4X <= 0) ghost4X = 26;
+    if ((int)ghost4X >= 27) ghost4X = 1;
 }
-
-
-  
-
    // CONTEUDO DE TEXTO 
 
    // Temporizador
