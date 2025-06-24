@@ -2,6 +2,7 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <string> 
+#include <cstring>
 
 // Código base para jogo do Pac-Man usando SFML
 // Mapa desenhado:        André Gustavo   15/06/23
@@ -11,8 +12,8 @@
 // Intenção de movimento: não implementado
 
 const int SIZE = 35;      // Tamanho de cada célula do mapa
-
-char mapa[31][29] = {
+char copiaMapa[31][30]; // Armazena a copia do mapa
+char mapa[31][30] = {
     "1111111111111111111111111111",
     "1222222222222222222222222221",
     "1211211112111111112111121121",
@@ -83,7 +84,7 @@ sf::Clock clockGhost1;
 sf::Clock clockGhost2;
 sf::Clock clockGhost3;
 sf::Clock clockGhost4;
-// cria a janela
+
 
 bool jogoFinalizado = false; // situacao do jogo
 bool musicaFinalPlay = false; // situacao da musica final
@@ -91,8 +92,12 @@ bool musicaSemVidaPlay = false; // situacao da musica final
 bool semVida = false; // situação das vidas do Harry
 bool perdeuVida = false; // se perdeu uma vida
 bool aguardaReinicio = false; // Se perder uma vida, indica se o jogo está aguardando um minuto para inciar
-// PROTOTIPO DE FUNCOES
 
+// PROTOTIPO DE FUNCOES
+// Realiza uma cópia do mapa original para não se perder quando reiniciar o jogo
+void copiarMapa(char copiaOriginal[31][30], char mapa[31][30]);
+// Reinicia o jogo com as variaveis globais de inicio
+void reiniciarJogo();
 //Verifica se o Harry colidiu com algum fantasma, para evitar ultrapassagem devido ghost 
 // anda por coordenadas decimais, aplica-se uma margem de tolerancia que permite dectetar colisões.
 bool colisaoHarry(double ghostX, double ghostY, int posx, int posy, double tolerancia = 0.7);
@@ -103,7 +108,9 @@ void conversorTempo(int &segundos, int &minutos, sf::Clock gameClock);
 // Define as musicas do jogo
 void DefineMusic(sf::Music &music, sf::Music &musicEndGame,  sf::Music &musicDead);
 // Define os textos do jogo
-void defineText (sf::Text &pontuacao, sf::Text &endGame, sf::Text &temporizador, sf::Text &reduzirVida, sf::Text &acabouVida, sf::Font &font);
+void defineText (sf::Text &pontuacao, sf::Text &endGame, sf::Text &temporizador, 
+                  sf::Text &reduzirVida, sf::Text &acabouVida, sf::Text &mensagemInicial, 
+                  sf::Text &mensagemFinal, sf::Font &font);
 // Define os tiles para o fundo e parede
 void defineTiles(sf::Sprite &spriteFundo, sf::Sprite &spriteParede);
 // Define o sprite para as pilulas (pedras)
@@ -165,19 +172,27 @@ void soltarGhost(bool &preso, sf::Clock &clock, float atraso,
         clock.restart();
     }
 }
-
-int main() {
    int totalPedras = 0;
    int contadorPedra = 0;
+   // Define as possiveis situações do jogo   
+   enum situacaoJogo {INICIO, ANDAMENTO};
+   //Inicialmente está na situação de inicio
+   situacaoJogo atual = INICIO;
+
+
    // Define as possiveis direcoes que o harry pode andar 
    enum Direcao { NENHUMA, ESQUERDA, DIREITA, CIMA, BAIXO };
    // Inicia a direçao seja nenhuma, ou seja, neutra e parada
    Direcao direcaoAtual = NENHUMA;
    // O jogo inicia com 3 vidas do Pacman
-   int vidas = 3;
+   int vidas = 20;
    Direcao proximaDirecao = NENHUMA;
+      // Música de fundo
+   sf::Music music;
 
-    sf::RenderWindow window(sf::VideoMode(980, 1085), "Pac-Wizard: A cacada em Hogwarts");
+int main() {
+   copiarMapa(copiaMapa, mapa); // Copia o mapa do original para usar quando reiniciar o mapa
+   sf::RenderWindow window(sf::VideoMode(980, 1085), "Pac-Wizard: A cacada em Hogwarts");
 
     // shape da parede
     sf::RectangleShape rectangle(sf::Vector2f(SIZE, SIZE));
@@ -233,8 +248,7 @@ int main() {
    defineTiles(spriteFundo, spriteParede);
 
 
-   // Música de fundo
-   sf::Music music;
+
    sf::Music musicEndGame; // Musica de fim de jogo
    sf::Music musicDead; // Musica de fim de vida
    sf::SoundBuffer bufferVida; //Buffer para quando perder vida
@@ -266,9 +280,10 @@ int main() {
    sf::Text endGame;
    sf::Text reduzirVida;
    sf::Text acabouVida;
-
+   sf::Text mensagemInicial;
+   sf::Text mensagemFinal;
    // Define os textos 
-   defineText(pontuacao, temporizador, endGame, reduzirVida, acabouVida, font);
+   defineText(pontuacao, temporizador, endGame, reduzirVida, acabouVida, mensagemInicial, mensagemFinal, font);
 
    sf::Clock gameClock; // relogio do jogo
    sf::Clock clockAndar; // relogio do andar do harry
@@ -283,8 +298,18 @@ int main() {
             // evento "fechar" acionado: fecha a janela
             if (event.type == sf::Event::Closed)
                 window.close();
-
-            if (!jogoFinalizado && event.type == sf::Event::KeyPressed) { // se o jogo nao estiver finalizado e houver alguma tecla pressionada
+            // Se o botão for pressionado e for enter, jogo inicia novamente, caso esteja na situação de finalizado ou inicio, para andamento
+            if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Enter){
+               if (atual == INICIO) { // Se a situação do jogo for inicio, muda para andamento e reinicia o relogio do jogo
+                  atual = ANDAMENTO;
+                  gameClock.restart();
+               }
+               else if (jogoFinalizado){ // Caso, o jogo esteja finalizado
+                     reiniciarJogo();  // reiniciar o jogo
+                     gameClock.restart();   // reinicia o relógio do jogo
+               }
+            }
+            if (atual == ANDAMENTO && !jogoFinalizado && event.type == sf::Event::KeyPressed) { // se o jogo nao estiver finalizado e houver alguma tecla pressionada
                if (event.key.code == sf::Keyboard::Left|| event.key.code == sf::Keyboard::A) { // se for a tecla para esquerda
                   proximaDirecao = ESQUERDA; // proxima direcao muda 
                }
@@ -301,7 +326,7 @@ int main() {
         }
 
       // a cada 0.2 segundos, atualiza a posicao automaticamente do pacman//
-      if (!jogoFinalizado && clockAndar.getElapsedTime() > sf::seconds(0.2)) {
+      if (atual == ANDAMENTO && !jogoFinalizado && clockAndar.getElapsedTime() > sf::seconds(0.2)) {
       clockAndar.restart(); // reinicia o relogio para o próximo intervalo 
       // verifica se a proxima direcao pode ser executada usando um teste//
       if (proximaDirecao != NENHUMA && podeMover) {
@@ -370,19 +395,19 @@ int main() {
 
 // ------------------- Liberação dos fantasmas da jaula -------------------
 // Chama a função soltarGhost para cada fantasma, que vai movê-los da jaula
-
+if(atual == ANDAMENTO && !jogoFinalizado){
 soltarGhost(ghost1Preso, clockGhost1, 1.0f, ghost1X, ghost1Y, ghost1, ghost1_up, 13, 10);
 soltarGhost(ghost2Preso, clockGhost2, 1.0f, ghost2X, ghost2Y, ghost2, ghost2_up, 13, 10);
 soltarGhost(ghost3Preso, clockGhost3, 1.0f, ghost3X, ghost3Y, ghost3, ghost3_up, 13, 10);
 soltarGhost(ghost4Preso, clockGhost4, 1.0f, ghost4X, ghost4Y, ghost4, ghost4_up, 13, 10);
-  
+}
 
 // Movimento dos fantasmas 
 // Só movemos cada fantasma se ele já tiver sido liberado da jaula (ghostXPreso == false).
 
 // Movimento aleatório do ghost1
 
-if (!jogoFinalizado && !ghost1Preso) {
+if (atual == ANDAMENTO && !jogoFinalizado && !ghost1Preso) {
     if (clockGhost1.getElapsedTime().asSeconds() > 0.1f) {
 
         // Vetores de deslocamento para cima, baixo, esquerda e direita
@@ -432,7 +457,7 @@ if ((int)ghost1X >= 27) ghost1X = 1;
    
 
 // Movimento aleatório do ghost2 (igual ao ghost1)
-if (!jogoFinalizado && !ghost2Preso) {
+if (atual == ANDAMENTO && !jogoFinalizado && !ghost2Preso) {
     if (clockGhost2.getElapsedTime().asSeconds() > 0.1f) {
 
         // Vetores de deslocamento para cima, baixo, esquerda e direita
@@ -482,7 +507,7 @@ if (!jogoFinalizado && !ghost2Preso) {
 
 // Movimento perseguidor do ghost3
 // Prioriza se aproximar do Pacman no eixo X, depois no eixo Y
-if (!jogoFinalizado && !ghost3Preso) {
+if (atual == ANDAMENTO && !jogoFinalizado && !ghost3Preso) {
     if (clockGhost3.getElapsedTime().asSeconds() > 0.3f) {
         int dx = 0, dy = 0;
 
@@ -510,7 +535,7 @@ if (!jogoFinalizado && !ghost3Preso) {
 
 // Movimento perseguidor do ghost4
 // Prioriza se aproximar do Pacman no eixo Y, depois no eixo X
-if (!jogoFinalizado && !ghost4Preso) {
+if (atual == ANDAMENTO && !jogoFinalizado && !ghost4Preso) {
     if (clockGhost4.getElapsedTime().asSeconds() > 0.3) {
         int dx = 0, dy = 0;
 
@@ -535,7 +560,7 @@ if (!jogoFinalizado && !ghost4Preso) {
     if ((int)ghost4X >= 27) ghost4X = 1;
 };
 
-   if(!jogoFinalizado && !aguardaReinicio &&      
+   if(atual == ANDAMENTO && !jogoFinalizado && !aguardaReinicio &&      
    (
       colisaoHarry(ghost1X, ghost1Y, posx, posy)||
       colisaoHarry(ghost2X, ghost2Y, posx, posy)||
@@ -559,6 +584,8 @@ if (!jogoFinalizado && !ghost4Preso) {
       }
       // Caso esteja aguardando reinício e já passou mais de 1 segundo
       if(aguardaReinicio && clockReinicio.getElapsedTime().asSeconds() > 0.3f){
+         direcaoAtual = NENHUMA; // Para permanecer na mesma posição inicial do jogo
+         pac = pac_right; // Sprite permanece o de padrão
          aguardaReinicio = false;  // Interrompe o modo de espera
 
          // Reinicia as posições originais do Harry e dos fantasmas
@@ -591,7 +618,10 @@ if (!jogoFinalizado && !ghost4Preso) {
    reduzirVida.setString("Voce sentiu um frio na espinha... Um Dementador te alcancou!");
    // Mensagem de fim de vidas
    acabouVida.setString("Avada Kedavra! Sua jornada termina aqui, bruxo(a) corajoso(a).");
-
+   // Mensagem de Inicio de Jogo
+   mensagemInicial.setString("Pressione ENTER para iniciar sua jornada em Hogwarts!");
+   // Mensagem Final do Jogo
+   mensagemFinal.setString("Pressione ENTER para jogar novamente.");
    // limpa a janela com a cor preta
     window.clear(sf::Color::Black);
     // desenha o fundo da tela (imagem única)
@@ -632,41 +662,46 @@ if (!jogoFinalizado && !ghost4Preso) {
             window.draw(vida);
          }
 
-      if(jogoFinalizado){
-            if(semVida){
-               window.draw(acabouVida);
-               if(!musicaSemVidaPlay){
-                  music.stop();
-                  musicDead.setVolume(100);    // Volume de 0 a 100 (pode ajustar para menos se estiver muito alto)
-                  musicDead.play();         // Começa a tocar
-                  musicaSemVidaPlay = true;
+         if(jogoFinalizado){
+               if(semVida){
+                  window.draw(acabouVida);
+                  if(!musicaSemVidaPlay){
+                     music.stop();
+                     musicDead.setVolume(100);    // Volume de 0 a 100 (pode ajustar para menos se estiver muito alto)
+                     musicDead.play();         // Começa a tocar
+                     musicaSemVidaPlay = true;
+                  }
                }
+               else{
+                  window.draw(endGame);
+                  if(!musicaFinalPlay){
+                     music.stop();
+                     musicEndGame.setVolume(100);    // Volume de 0 a 100 (pode ajustar para menos se estiver muito alto)
+                     musicEndGame.play();         // Começa a tocar
+                     musicaFinalPlay = true;
+                  }
             }
-            else{
-               window.draw(endGame);
-               if(!musicaFinalPlay){
-                  music.stop();
-                  musicEndGame.setVolume(100);    // Volume de 0 a 100 (pode ajustar para menos se estiver muito alto)
-                  musicEndGame.play();         // Começa a tocar
-                  musicaFinalPlay = true;
-               }
          }
-      }
-      else if (perdeuVida){
-         window.draw(reduzirVida);
-      }
-      else{
-         window.draw(pontuacao);
-         window.draw(temporizador);
-      }
-      if (perdeuVida && clockTextoPerdeuVida.getElapsedTime().asSeconds() > 3.0f) {
-         perdeuVida = false; // Desativa a impressao da mensagem
-      }
-        // termina e desenha o frame corrente
-        window.display();
-        
-        }
-    return 0;
+         else if (perdeuVida){
+            window.draw(reduzirVida);
+         }
+         else if (atual == ANDAMENTO){
+            window.draw(pontuacao);
+            window.draw(temporizador);
+         }
+         if (perdeuVida && clockTextoPerdeuVida.getElapsedTime().asSeconds() > 3.0f) {
+            perdeuVida = false; // Desativa a impressao da mensagem
+         }
+         if (atual == INICIO) 
+               window.draw(mensagemInicial);
+         else if (jogoFinalizado) 
+               window.draw(mensagemFinal);
+      
+         // termina e desenha o frame corrente
+         window.display();
+         
+         }
+      return 0;
 }
 bool colisaoHarry(double ghostX, double ghostY, int posx, int posy, double tolerancia){
       if((ghostX >= posx - tolerancia && ghostX <= posx + tolerancia) &&
@@ -708,7 +743,7 @@ void DefineMusic(sf::Music &music, sf::Music &musicEndGame, sf::Music &musicDead
    std::cout << "Erro ao carregar a música\n";
    }
 };
-void defineText (sf::Text &pontuacao, sf::Text &temporizador, sf::Text &endGame, sf::Text &reduzirVida, sf::Text &acabouVida, sf::Font &font){
+void defineText (sf::Text &pontuacao, sf::Text &temporizador, sf::Text &endGame, sf::Text &reduzirVida, sf::Text &acabouVida,  sf::Text &mensagemInicial, sf::Text &mensagemFinal,  sf::Font &font){
    
    pontuacao.setFont(font);
    pontuacao.setCharacterSize(24); // Tamanho da fonte
@@ -740,6 +775,21 @@ void defineText (sf::Text &pontuacao, sf::Text &temporizador, sf::Text &endGame,
    acabouVida.setPosition(35, 5); // Posição na janela
    acabouVida.setOutlineThickness(4); // tamanho da borda
    acabouVida.setOutlineColor(sf::Color(189,118,44)); // Cor da borda
+
+   mensagemInicial.setFont(font);
+   mensagemInicial.setCharacterSize(24); // Tamanho da fonte
+   mensagemInicial.setFillColor(sf::Color::Black); // Cor da fonte
+   mensagemInicial.setPosition(35, 5); // Posição na janela
+   mensagemInicial.setOutlineThickness(4); // tamanho da borda
+   mensagemInicial.setOutlineColor(sf::Color(189,118,44)); // Cor da borda
+
+   mensagemFinal.setFont(font);
+   mensagemFinal.setCharacterSize(24); // Tamanho da fonte
+   mensagemFinal.setFillColor(sf::Color::Black); // Cor da fonte
+   mensagemFinal.setPosition(35, 1050); // Posição na janela
+   mensagemFinal.setOutlineThickness(4); // tamanho da borda
+   mensagemFinal.setOutlineColor(sf::Color(189,118,44)); // Cor da borda
+            
 }
 void defineTiles(sf::Sprite &spriteFundo, sf::Sprite &spriteParede) {
    // Fundo
@@ -1059,3 +1109,42 @@ void defineGhost(
       ghost4_down.setOrigin(tamanhoGhost4_down.x / 2.0f, tamanhoGhost4_down.y / 2.0f); // Define origem no centro
       ghost4_down.setScale(1.3f, 1.3f); //  Aplica escala no sprite
       }
+
+void copiarMapa(char copiaOriginal[31][30], char mapa[31][30]){
+   // Copia do mapa origianal;
+      for(int i = 0; i<31;i++){
+         strcpy(copiaOriginal[i], mapa[i]);
+      }
+};
+void reiniciarJogo(){
+                     // Restaura o mapa original
+                     copiarMapa(mapa, copiaMapa);
+                     posx = 1; posy = 29; // Posição do Harry
+                     //Posições dos Ghosts
+                     ghost1X = 11.2; ghost1Y = 14; ghost1Preso = true;
+                     ghost2X = 12.5; ghost2Y = 14; ghost2Preso = true;
+                     ghost3X = 14;   ghost3Y = 14; ghost3Preso = true;
+                     ghost4X = 15.5; ghost4Y = 14; ghost4Preso = true;
+                     // Direção do Harry
+                     direcaoAtual = NENHUMA;
+                     // Intenção de movimento 
+                     proximaDirecao = NENHUMA;
+                     // Quantidade de vidas
+                     vidas = 3;
+                     // Contador de pedra
+                     contadorPedra = 0;
+                     // Situações das músicas
+                     musicaFinalPlay = false;
+                     musicaSemVidaPlay = false;
+                     // Situações das vidas
+                     semVida = false;
+                     perdeuVida = false;
+                     aguardaReinicio = false;
+                     // Situação da música de fundo
+                     music.stop();
+                     music.play();
+                     // atualiza para um jogo que não iniciou/ não finalizou
+                     jogoFinalizado = false;
+                     // Muda para situação de andamento
+                     atual = ANDAMENTO;
+}
