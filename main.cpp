@@ -86,14 +86,23 @@ sf::Clock clockGhost4;
 
 bool jogoFinalizado = false; // situacao do jogo
 bool musicaFinalPlay = false; // situacao da musica final
-
+bool musicaSemVidaPlay = false; // situacao da musica final
+bool semVida = false; // situação das vidas do Harry
+bool perdeuVida = false; // se perdeu uma vida
+bool aguardaReinicio = false; // Se perder uma vida, indica se o jogo está aguardando um minuto para inciar
 // PROTOTIPO DE FUNCOES
+
+//Verifica se o Harry colidiu com algum fantasma, para evitar ultrapassagem devido ghost 
+// anda por coordenadas decimais, aplica-se uma margem de tolerancia que permite dectetar colisões.
+bool colisaoHarry(double ghostX, double ghostY, int posx, int posy, double tolerancia = 0.7);
+// Define o sprite de vida
+void defineVida(sf::Sprite &vida);
 //Recebe segundos e converte em minutos pra o temporizador
 void conversorTempo(int &segundos, int &minutos, sf::Clock gameClock);
 // Define as musicas do jogo
-void DefineMusic(sf::Music &music, sf::Music &musicEndGame);
+void DefineMusic(sf::Music &music, sf::Music &musicEndGame,  sf::Music &musicDead);
 // Define os textos do jogo
-void defineText (sf::Text &pontuacao, sf::Text &endGame, sf::Text &temporizador, sf::Font &font);
+void defineText (sf::Text &pontuacao, sf::Text &endGame, sf::Text &temporizador, sf::Text &reduzirVida, sf::Text &acabouVida, sf::Font &font);
 // Define os tiles para o fundo e parede
 void defineTiles(sf::Sprite &spriteFundo, sf::Sprite &spriteParede);
 // Define o sprite para as pilulas (pedras)
@@ -163,6 +172,8 @@ int main() {
    enum Direcao { NENHUMA, ESQUERDA, DIREITA, CIMA, BAIXO };
    // Inicia a direçao seja nenhuma, ou seja, neutra e parada
    Direcao direcaoAtual = NENHUMA;
+   // O jogo inicia com 3 vidas do Pacman
+   int vidas = 3;
 
     sf::RenderWindow window(sf::VideoMode(980, 1085), "Pac-Wizard: A cacada em Hogwarts");
 
@@ -176,10 +187,14 @@ int main() {
    sf::Sprite pac, pac_up, pac_down, pac_left, pac_right;
    definePacman(pac, pac_up, pac_down, pac_left, pac_right);
 
-
-    sf::Sprite pedra;
-    definePedra(pedra);
-   
+   // Cria um sprite pedra
+   sf::Sprite pedra;
+   // Define atributos da pedra
+   definePedra(pedra);
+   // Cria um sprite vida
+   sf::Sprite vida;
+   // Define atributos da vida
+   defineVida(vida);
 
     sf::Sprite ghost1;        //  Criando objeto sprite ghost1
     sf::Sprite ghost1_left;
@@ -219,7 +234,16 @@ int main() {
    // Música de fundo
    sf::Music music;
    sf::Music musicEndGame; // Musica de fim de jogo
-   DefineMusic(music, musicEndGame);
+   sf::Music musicDead; // Musica de fim de vida
+   sf::SoundBuffer bufferVida; //Buffer para quando perder vida
+   sf::Sound somVida;
+      if (!bufferVida.loadFromFile("resources/sounds/hp_buffer_vida.ogg")) {
+      std::cout << "Erro ao carregar som de perda de vida!\n";
+   }
+   somVida.setBuffer(bufferVida);
+
+
+   DefineMusic(music, musicEndGame, musicDead);
 
    sf::Font font; // Carregando a fonte da pontuacao
    if (!font.loadFromFile("resources/fonts/upheavtt.ttf")) { 
@@ -238,11 +262,16 @@ int main() {
    sf::Text pontuacao;
    sf::Text temporizador;
    sf::Text endGame;
+   sf::Text reduzirVida;
+   sf::Text acabouVida;
+
    // Define os textos 
-   defineText(pontuacao, temporizador, endGame, font);
+   defineText(pontuacao, temporizador, endGame, reduzirVida, acabouVida, font);
 
    sf::Clock gameClock; // relogio do jogo
    sf::Clock clockAndar; // relogio do andar do harry
+   sf::Clock clockReinicio; // Quando perder a vida, mede o tempo desde que o jogador perdeu uma vida
+   sf::Clock clockTextoPerdeuVida; //temporizador para deixar pouco tempo na tela a mensgaem de perdeu vida
 
     while (window.isOpen()) {
 
@@ -275,47 +304,46 @@ int main() {
 
       // a cada 0.2 segundos, atualiza a posicao automaticamente do pacman
       if (!jogoFinalizado && clockAndar.getElapsedTime() > sf::seconds(0.2)) {
-      clockAndar.restart(); // reinicia o relogio para o próximo intervalo 
-      // move o harry conforme a direção atual, se não houver parede, ou seja '1')
-      switch (direcaoAtual) {
-         case ESQUERDA:
-               if (mapa[posy][posx-1] != '1') 
-               posx--; // move para a esquerda no mapa
-               else 
-               direcaoAtual = NENHUMA; // bateu na parede, o movimento para
-               break;
-         case DIREITA:
-               if (mapa[posy][posx+1] != '1') 
-               posx++; // move para a direita no mapa
-               else 
-               direcaoAtual = NENHUMA;
-               break;
-         case CIMA:
-               if (mapa[posy-1][posx] != '1') 
-               posy--;  // move para cima no mapa
-               else 
-               direcaoAtual = NENHUMA;
-               break;
-         case BAIXO:
-               if (mapa[posy+1][posx] != '1') 
-               posy++; // move para baixo  no mapa
-               else 
-               direcaoAtual = NENHUMA;
-               break;
-         case NENHUMA:
-               break; // não move
+         clockAndar.restart(); // reinicia o relogio para o próximo intervalo 
+         // move o harry conforme a direção atual, se não houver parede, ou seja '1')
+         switch (direcaoAtual) {
+            case ESQUERDA:
+                  if (mapa[posy][posx-1] != '1') 
+                  posx--; // move para a esquerda no mapa
+                  else 
+                  direcaoAtual = NENHUMA; // bateu na parede, o movimento para
+                  break;
+            case DIREITA:
+                  if (mapa[posy][posx+1] != '1') 
+                  posx++; // move para a direita no mapa
+                  else 
+                  direcaoAtual = NENHUMA;
+                  break;
+            case CIMA:
+                  if (mapa[posy-1][posx] != '1') 
+                  posy--;  // move para cima no mapa
+                  else 
+                  direcaoAtual = NENHUMA;
+                  break;
+            case BAIXO:
+                  if (mapa[posy+1][posx] != '1') 
+                  posy++; // move para baixo  no mapa
+                  else 
+                  direcaoAtual = NENHUMA;
+                  break;
+            case NENHUMA:
+                  break; // não move
+         }
+
+      // verifica pedras e atualiza contador e fim de jogo
+      if (mapa[posy][posx] == '2') { // se a posição atual do harry for '2', ou seja, a uma pedra (pilula)
+         mapa[posy][posx] = '0'; // atualiza e retira a pedra 
+         contadorPedra++; // soma a quantidade de pedras coletada 
+         std::cout << "Comidas: " << contadorPedra << std::endl; 
+         if (contadorPedra == totalPedras)  // se o numero de pedras coletadas for igual a quantidade total do mapa
+               jogoFinalizado = true; // a situacao do jogo muda e finaliza o jogo
       }
-
-    // verifica pedras e atualiza contador e fim de jogo
-    if (mapa[posy][posx] == '2') { // se a posição atual do harry for '2', ou seja, a uma pedra (pilula)
-        mapa[posy][posx] = '0'; // atualiza e retira a pedra 
-        contadorPedra++; // soma a quantidade de pedras coletada 
-        std::cout << "Comidas: " << contadorPedra << std::endl; 
-        if (contadorPedra == totalPedras)  // se o numero de pedras coletadas for igual a quantidade total do mapa
-            jogoFinalizado = true; // a situacao do jogo muda e finaliza o jogo
-    }
 }
-
     //(teletransporte do pac de um lado para outo)
     if (posx < 0) posx = 27;     
     if (posx > 27) posx = 0; 
@@ -334,7 +362,7 @@ soltarGhost(ghost4Preso, clockGhost4, 1.0f, ghost4X, ghost4Y, ghost4, ghost4_up,
 
 // Movimento aleatório do ghost1
 
-if (!ghost1Preso) {
+if (!jogoFinalizado && !ghost1Preso) {
     if (clockGhost1.getElapsedTime().asSeconds() > 0.1f) {
 
         // Vetores de deslocamento para cima, baixo, esquerda e direita
@@ -384,7 +412,7 @@ if ((int)ghost1X >= 27) ghost1X = 1;
    
 
 // Movimento aleatório do ghost2 (igual ao ghost1)
-if (!ghost2Preso) {
+if (!jogoFinalizado && !ghost2Preso) {
     if (clockGhost2.getElapsedTime().asSeconds() > 0.1f) {
 
         // Vetores de deslocamento para cima, baixo, esquerda e direita
@@ -434,7 +462,7 @@ if (!ghost2Preso) {
 
 // Movimento perseguidor do ghost3
 // Prioriza se aproximar do Pacman no eixo X, depois no eixo Y
-if (!ghost3Preso) {
+if (!jogoFinalizado && !ghost3Preso) {
     if (clockGhost3.getElapsedTime().asSeconds() > 0.3f) {
         int dx = 0, dy = 0;
 
@@ -462,7 +490,7 @@ if (!ghost3Preso) {
 
 // Movimento perseguidor do ghost4
 // Prioriza se aproximar do Pacman no eixo Y, depois no eixo X
-if (!ghost4Preso) {
+if (!jogoFinalizado && !ghost4Preso) {
     if (clockGhost4.getElapsedTime().asSeconds() > 0.3) {
         int dx = 0, dy = 0;
 
@@ -485,24 +513,65 @@ if (!ghost4Preso) {
     // TELETRANSPORTE para ghost4
     if ((int)ghost4X <= 0) ghost4X = 26;
     if ((int)ghost4X >= 27) ghost4X = 1;
-}
+};
 
+   if(!jogoFinalizado && !aguardaReinicio &&      
+   (
+      colisaoHarry(ghost1X, ghost1Y, posx, posy)||
+      colisaoHarry(ghost2X, ghost2Y, posx, posy)||
+      colisaoHarry(ghost3X, ghost3Y, posx, posy)||
+      colisaoHarry(ghost4X, ghost4Y, posx, posy)
+   )){
+         vidas--;
+         if(vidas ==0){
+            //Caso não tenha mais vidas, acaba o jogo
+            jogoFinalizado = true; // Ativa o flag para finalizar o jogo
+            semVida = true; // Ativa o flag para mostrar notificar que está "sem vida"
+         }
+         else{
+             // Caso  ainda tiver vidas
+            aguardaReinicio = true;         // Atualiza o estado para aguardando reinício
+            clockReinicio.restart();         // Reinicia o relógio para contar 1 segundo
+            perdeuVida = true;               // Ativa O flag para mostrar notificar que "perdeu vida"
+            clockTextoPerdeuVida.restart(); // Reinicia o relógio para contar 0.5 segundo
+             somVida.play(); // toca o buffer de perda de vida
+         }
+      }
+      // Caso esteja aguardando reinício e já passou mais de 1 segundo
+      if(aguardaReinicio && clockReinicio.getElapsedTime().asSeconds() > 0.3f){
+         aguardaReinicio = false;  // Interrompe o modo de espera
 
-  
+         // Reinicia as posições originais do Harry e dos fantasmas
+         posx = 1;
+         posy = 29;
+         ghost1X = 11.2; ghost1Y = 14; ghost1Preso = true;
+         ghost2X = 12.5; ghost2Y = 14; ghost2Preso = true;
+         ghost3X = 14;   ghost3Y = 14; ghost3Preso = true;
+         ghost4X = 15.5; ghost4Y = 14; ghost4Preso = true;
+
+         // Reinicia tempo de movimentação dos fantasmas
+         clockGhost1.restart();
+         clockGhost2.restart();
+         clockGhost3.restart();
+         clockGhost4.restart();
+      }
 
    //-------------------------IMPRESSÃO DE TEXTO ----------------------------
 
    // Temporizador
    int segundos, minutos;
    conversorTempo(segundos, minutos, gameClock); 
-   temporizador.setString("Tempo: " + std::to_string(minutos) + ":" + (segundos < 10 ? "0" : "") + std::to_string(segundos));
    // Formata o horário do tipo [1:01], se o segundo for menor que 10, adiciona um 0, para mander o formato
-
+   temporizador.setString("Tempo: " + std::to_string(minutos) + ":" + (segundos < 10 ? "0" : "") + std::to_string(segundos));
    // Define o valor de pílulas comidas
    pontuacao.setString("Numero de Pedras Filosofais encontradas: " + std::to_string(contadorPedra));
    // Mensagem de fim de jogo
    endGame.setString("Patronus! Pedras coletadas! Hogwarts agradece, bravo(a) bruxo(a).");
-   
+   // Mensagem de redução de vida
+   reduzirVida.setString("Voce sentiu um frio na espinha... Um Dementador te alcancou!");
+   // Mensagem de fim de vidas
+   acabouVida.setString("Avada Kedavra! Sua jornada termina aqui, bruxo(a) corajoso(a).");
+
    // limpa a janela com a cor preta
     window.clear(sf::Color::Black);
     // desenha o fundo da tela (imagem única)
@@ -537,27 +606,62 @@ if (!ghost4Preso) {
          window.draw(ghost3);
          window.draw(ghost4);
 
-     
+
+         for (int i = 0; i < vidas; ++i) {
+            vida.setPosition(35 + i * 40, 1050); // espaçamento horizontal
+            window.draw(vida);
+         }
 
       if(jogoFinalizado){
-         window.draw(endGame);
-         if(!musicaFinalPlay){
-            music.stop();
-            musicEndGame.setVolume(100);    // Volume de 0 a 100 (pode ajustar para menos se estiver muito alto)
-            musicEndGame.play();         // Começa a tocar
-            musicaFinalPlay = true;
+            if(semVida){
+               window.draw(acabouVida);
+               if(!musicaSemVidaPlay){
+                  music.stop();
+                  musicDead.setVolume(100);    // Volume de 0 a 100 (pode ajustar para menos se estiver muito alto)
+                  musicDead.play();         // Começa a tocar
+                  musicaSemVidaPlay = true;
+               }
+            }
+            else{
+               window.draw(endGame);
+               if(!musicaFinalPlay){
+                  music.stop();
+                  musicEndGame.setVolume(100);    // Volume de 0 a 100 (pode ajustar para menos se estiver muito alto)
+                  musicEndGame.play();         // Começa a tocar
+                  musicaFinalPlay = true;
+               }
          }
       }
-
+      else if (perdeuVida){
+         window.draw(reduzirVida);
+      }
       else{
          window.draw(pontuacao);
          window.draw(temporizador);
+      }
+      if (perdeuVida && clockTextoPerdeuVida.getElapsedTime().asSeconds() > 3.0f) {
+         perdeuVida = false; // Desativa a impressao da mensagem
       }
         // termina e desenha o frame corrente
         window.display();
         
         }
     return 0;
+}
+bool colisaoHarry(double ghostX, double ghostY, int posx, int posy, double tolerancia){
+      if((ghostX >= posx - tolerancia && ghostX <= posx + tolerancia) &&
+         (ghostY >= posy - tolerancia && ghostY <= posy + tolerancia))
+            return true;
+      else
+         return false;
+   }
+void defineVida(sf::Sprite &vida){
+   static sf::Texture texturaVida;
+   if (!texturaVida.loadFromFile("resources/hp_left.png")) {
+      std::cout << "Erro lendo imagem hp.png\n";
+   }
+   vida.setTexture(texturaVida); // atribuindo a textura
+   vida.setScale(1.2f,1.2f);
 }
 void conversorTempo(int &segundos, int &minutos, sf::Clock gameClock){
    // armazena o tempo ocorrido desde o inicio do clock em segundos
@@ -567,7 +671,7 @@ void conversorTempo(int &segundos, int &minutos, sf::Clock gameClock){
    // pega o que resta da divisao de 60 (1 minuto) segundos
    segundos = segundos % 60;
 }
-void DefineMusic(sf::Music &music, sf::Music &musicEndGame){
+void DefineMusic(sf::Music &music, sf::Music &musicEndGame, sf::Music &musicDead){
    if (!music.openFromFile("resources/sounds/hp_sound.ogg")) {
    std::cout << "Erro ao carregar a música\n";
    }
@@ -579,9 +683,12 @@ void DefineMusic(sf::Music &music, sf::Music &musicEndGame){
    if (!musicEndGame.openFromFile("resources/sounds/hp_endGame.ogg")) {
    std::cout << "Erro ao carregar a música\n";
    }
-
+   // musica de fim das vidas
+   if (!musicDead.openFromFile("resources/sounds/hp_dead.ogg")) {
+   std::cout << "Erro ao carregar a música\n";
+   }
 };
-void defineText (sf::Text &pontuacao, sf::Text &temporizador, sf::Text &endGame, sf::Font &font){
+void defineText (sf::Text &pontuacao, sf::Text &temporizador, sf::Text &endGame, sf::Text &reduzirVida, sf::Text &acabouVida, sf::Font &font){
    
    pontuacao.setFont(font);
    pontuacao.setCharacterSize(24); // Tamanho da fonte
@@ -599,6 +706,20 @@ void defineText (sf::Text &pontuacao, sf::Text &temporizador, sf::Text &endGame,
    endGame.setPosition(35, 5); // posição na janela
    endGame.setOutlineThickness(4); // tamanho da borda
    endGame.setOutlineColor(sf::Color(189,118,44)); // Cor da borda
+
+   reduzirVida.setFont(font);
+   reduzirVida.setCharacterSize(24); // Tamanho da fonte
+   reduzirVida.setFillColor(sf::Color::Black); // Cor da fonte
+   reduzirVida.setPosition(35, 5); // Posição na janela
+   reduzirVida.setOutlineThickness(4); // tamanho da borda
+   reduzirVida.setOutlineColor(sf::Color(189,118,44)); // Cor da borda
+
+   acabouVida.setFont(font);
+   acabouVida.setCharacterSize(24); // Tamanho da fonte
+   acabouVida.setFillColor(sf::Color::Black); // Cor da fonte
+   acabouVida.setPosition(35, 5); // Posição na janela
+   acabouVida.setOutlineThickness(4); // tamanho da borda
+   acabouVida.setOutlineColor(sf::Color(189,118,44)); // Cor da borda
 }
 void defineTiles(sf::Sprite &spriteFundo, sf::Sprite &spriteParede) {
    // Fundo
