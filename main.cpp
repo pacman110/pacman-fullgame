@@ -48,7 +48,8 @@ char mapa[31][29] = {
 
 int posx = 1;       // posicao do PacMan
 int posy = 29;
-
+int testeX;
+int testeY;
 // posicao ghost
 double ghost1X = 11.2;
 double ghost1Y = 14; 
@@ -115,7 +116,7 @@ void defineGhost(
 // Função que verifica se uma coordenada (x, y) é válida para movimentação
 // Retorna true se for dentro dos limites do mapa e não for parede
 bool podeMover(int x, int y) {                                        // Verifica se x está entre 0 e 28 (colunas válidas do mapa)
-   return x >= 0 && x < 29 && y >= 0 && y < 31 && mapa[y][x] != '1';  // Verifica se y está entre 0 e 30 (linhas válidas do mapa)
+   return x >=-1 && x < 29 && y >= 0 && y < 31 && mapa[y][x] != '1';  // Verifica se y está entre 0 e 30 (linhas válidas do mapa)
 }                                                                     // Verifica se o caractere naquela posição não é '1' (parede)
 
 // Verifica se o movimento é válido para fantasmas (impede reentrada na jaula
@@ -161,6 +162,7 @@ int main() {
    enum Direcao { NENHUMA, ESQUERDA, DIREITA, CIMA, BAIXO };
    // Inicia a direçao seja nenhuma, ou seja, neutra e parada
    Direcao direcaoAtual = NENHUMA;
+   Direcao proximaDirecao = NENHUMA;
 
     sf::RenderWindow window(sf::VideoMode(980, 1085), "Pac-Wizard: A cacada em Hogwarts");
 
@@ -252,58 +254,76 @@ int main() {
                 window.close();
 
             if (!jogoFinalizado && event.type == sf::Event::KeyPressed) { // se o jogo nao estiver finalizado e houver alguma tecla pressionada
-               if (event.key.code == sf::Keyboard::Left) { // se for a tecla para esquerda
-                  direcaoAtual = ESQUERDA; // direcao muda 
-                  pac = pac_left; // sprite muda com base na direcao nova 
+               if (event.key.code == sf::Keyboard::Left|| event.key.code == sf::Keyboard::A) { // se for a tecla para esquerda
+                  proximaDirecao = ESQUERDA; // proxima direcao muda 
                }
-               else if (event.key.code == sf::Keyboard::Right) {  // se for a tecla para direita
-                  direcaoAtual = DIREITA;
-                  pac = pac_right;
+               else if (event.key.code == sf::Keyboard::Right||event.key.code == sf::Keyboard::D) {  // se for a tecla para direita
+                  proximaDirecao = DIREITA;
                }
-               else if (event.key.code == sf::Keyboard::Up) {  // se for a tecla para cima
-                  direcaoAtual = CIMA;
-                  pac = pac_up;
+               else if (event.key.code == sf::Keyboard::Up||event.key.code == sf::Keyboard::W) {  // se for a tecla para cima
+                  proximaDirecao = CIMA;
                }
-               else if (event.key.code == sf::Keyboard::Down) {  // se for a tecla para baixo
-                  direcaoAtual = BAIXO;
-                  pac = pac_down;
+               else if (event.key.code == sf::Keyboard::Down||event.key.code == sf::Keyboard::S) {  // se for a tecla para baixo
+                  proximaDirecao   = BAIXO;
                }
             }
         }
 
-      // a cada 0.2 segundos, atualiza a posicao automaticamente do pacman
+      // a cada 0.2 segundos, atualiza a posicao automaticamente do pacman//
       if (!jogoFinalizado && clockAndar.getElapsedTime() > sf::seconds(0.2)) {
       clockAndar.restart(); // reinicia o relogio para o próximo intervalo 
-      // move o harry conforme a direção atual, se não houver parede, ou seja '1')
-      switch (direcaoAtual) {
-         case ESQUERDA:
-               if (mapa[posy][posx-1] != '1') 
-               posx--; // move para a esquerda no mapa
-               else 
-               direcaoAtual = NENHUMA; // bateu na parede, o movimento para
-               break;
-         case DIREITA:
-               if (mapa[posy][posx+1] != '1') 
-               posx++; // move para a direita no mapa
-               else 
-               direcaoAtual = NENHUMA;
-               break;
-         case CIMA:
-               if (mapa[posy-1][posx] != '1') 
-               posy--;  // move para cima no mapa
-               else 
-               direcaoAtual = NENHUMA;
-               break;
-         case BAIXO:
-               if (mapa[posy+1][posx] != '1') 
-               posy++; // move para baixo  no mapa
-               else 
-               direcaoAtual = NENHUMA;
-               break;
-         case NENHUMA:
-               break; // não move
-      }
+      // verifica se a proxima direcao pode ser executada usando um teste//
+      if (proximaDirecao != NENHUMA && podeMover) {
+        int testeX = posx;
+        int testeY = posy;
+        
+        switch (proximaDirecao) {
+            case ESQUERDA: testeX--; break;
+            case DIREITA:  testeX++; break;
+            case CIMA:    testeY--; break;
+            case BAIXO:   testeY++; break;
+            default: break;
+        }
+    //se possivel, transforma a proxima direcao na direcao atual//
+    if (podeMover(testeX, testeY)) {
+            direcaoAtual = proximaDirecao;
+            proximaDirecao = NENHUMA;
+            
+            // Atualiza o sprite conforme a movimentacao do harry//
+            switch (direcaoAtual) {
+                case ESQUERDA: pac = pac_left; break;
+                case DIREITA:  pac = pac_right; break;
+                case CIMA:    pac = pac_up; break;
+                case BAIXO:   pac = pac_down; break;
+                default: break;
+            }
+        }
+    }
 
+//movimenta na direcao atual, ja conferindo a intencao de movimento//
+    if (direcaoAtual != NENHUMA) {
+        int nextX = posx;
+        int nextY = posy;
+        
+        switch (direcaoAtual) {
+            case ESQUERDA: nextX--; break;
+            case DIREITA:  nextX++; break;
+            case CIMA:    nextY--; break;
+            case BAIXO:   nextY++; break;
+            default: break;
+        }
+
+    if (podeMover(nextX, nextY)) {
+            posx = nextX;
+            posy = nextY;
+        } else {
+            // Se não pode mover, para//
+            direcaoAtual = NENHUMA;
+        }
+    }
+    
+
+    
     // verifica pedras e atualiza contador e fim de jogo
     if (mapa[posy][posx] == '2') { // se a posição atual do harry for '2', ou seja, a uma pedra
         mapa[posy][posx] = '0'; // atualiza e retira a pedra 
