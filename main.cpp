@@ -89,6 +89,8 @@ bool jogoFinalizado = false; // situacao do jogo
 bool musicaFinalPlay = false; // situacao da musica final
 
 // PROTOTIPO DE FUNCOES
+//Recebe segundos e converte em minutos pra o temporizador
+void conversorTempo(int &segundos, int &minutos, sf::Clock gameClock);
 // Define as musicas do jogo
 void DefineMusic(sf::Music &music, sf::Music &musicEndGame);
 // Define os textos do jogo
@@ -325,7 +327,7 @@ int main() {
 
     
     // verifica pedras e atualiza contador e fim de jogo
-    if (mapa[posy][posx] == '2') { // se a posição atual do harry for '2', ou seja, a uma pedra
+    if (mapa[posy][posx] == '2') { // se a posição atual do harry for '2', ou seja, a uma pedra (pilula)
         mapa[posy][posx] = '0'; // atualiza e retira a pedra 
         contadorPedra++; // soma a quantidade de pedras coletada 
         std::cout << "Comidas: " << contadorPedra << std::endl; 
@@ -338,7 +340,7 @@ int main() {
     if (posx < 0) posx = 27;     
     if (posx > 27) posx = 0; 
 
-    // ------------------- Liberação dos fantasmas da jaula -------------------
+// ------------------- Liberação dos fantasmas da jaula -------------------
 // Chama a função soltarGhost para cada fantasma, que vai movê-los da jaula
 
 soltarGhost(ghost1Preso, clockGhost1, 1.0f, ghost1X, ghost1Y, ghost1, ghost1_up, 13, 10);
@@ -504,20 +506,20 @@ if (!ghost4Preso) {
     if ((int)ghost4X <= 0) ghost4X = 26;
     if ((int)ghost4X >= 27) ghost4X = 1;
 }
-   // CONTEUDO DE TEXTO 
+
+
+  
+
+   //-------------------------IMPRESSÃO DE TEXTO ----------------------------
 
    // Temporizador
-   // armazena o tempo ocorrido desde o inicio do clock em segundos
-   int segundos = gameClock.getElapsedTime().asSeconds(); 
-   // converte em minutos 
-   int minutos = segundos / 60;
-   // pega o que resta de segundos
-   segundos = segundos % 60;
+   int segundos, minutos;
+   conversorTempo(segundos, minutos, gameClock); 
    temporizador.setString("Tempo: " + std::to_string(minutos) + ":" + (segundos < 10 ? "0" : "") + std::to_string(segundos));
-   
+   // Formata o horário do tipo [1:01], se o segundo for menor que 10, adiciona um 0, para mander o formato
+
    // Define o valor de pílulas comidas
    pontuacao.setString("Numero de Pedras Filosofais encontradas: " + std::to_string(contadorPedra));
-   
    // Mensagem de fim de jogo
    endGame.setString("Patronus! Pedras coletadas! Hogwarts agradece, bravo(a) bruxo(a).");
    
@@ -525,9 +527,6 @@ if (!ghost4Preso) {
     window.clear(sf::Color::Black);
     // desenha o fundo da tela (imagem única)
     window.draw(spriteFundo);
-
-
-        // desenhar tudo aqui...
 
         // desenha paredes
         for(int i=0;i<31;i++)
@@ -546,18 +545,17 @@ if (!ghost4Preso) {
         pac.setPosition(posx * SIZE + SIZE / 2.0f, posy * SIZE + SIZE / 2.0f);
         
         //desenha o ghost na posição atual
-
         ghost1.setPosition(ghost1X * SIZE + SIZE / 2.0f, ghost1Y * SIZE + SIZE / 2.0f);
         ghost2.setPosition(ghost2X * SIZE + SIZE / 2.0f, ghost2Y * SIZE + SIZE / 2.0f);
         ghost3.setPosition(ghost3X * SIZE + SIZE / 2.0f, ghost3Y * SIZE + SIZE / 2.0f);
         ghost4.setPosition(ghost4X * SIZE + SIZE / 2.0f, ghost4Y * SIZE + SIZE / 2.0f);
 
-      window.draw(pac);
+         window.draw(pac);
 
-      window.draw(ghost1);
-      window.draw(ghost2);
-      window.draw(ghost3);
-      window.draw(ghost4);
+         window.draw(ghost1);
+         window.draw(ghost2);
+         window.draw(ghost3);
+         window.draw(ghost4);
 
      
 
@@ -580,6 +578,14 @@ if (!ghost4Preso) {
         
         }
     return 0;
+}
+void conversorTempo(int &segundos, int &minutos, sf::Clock gameClock){
+   // armazena o tempo ocorrido desde o inicio do clock em segundos
+   segundos = gameClock.getElapsedTime().asSeconds(); 
+   // converte em minutos 
+   minutos = segundos / 60;
+   // pega o que resta da divisao de 60 (1 minuto) segundos
+   segundos = segundos % 60;
 }
 void DefineMusic(sf::Music &music, sf::Music &musicEndGame){
    if (!music.openFromFile("resources/sounds/hp_sound.ogg")) {
