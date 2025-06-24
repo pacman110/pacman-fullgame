@@ -12,6 +12,7 @@
 // Intenção de movimento: não implementado
 
 const int SIZE = 35;      // Tamanho de cada célula do mapa
+const int QUANT_VIDAS = 3; // Quantidade de vidas iniciais
 char copiaMapa[31][30]; // Armazena a copia do mapa
 char mapa[31][30] = {
     "1111111111111111111111111111",
@@ -178,14 +179,12 @@ void soltarGhost(bool &preso, sf::Clock &clock, float atraso,
    enum situacaoJogo {INICIO, ANDAMENTO};
    //Inicialmente está na situação de inicio
    situacaoJogo atual = INICIO;
-
-
    // Define as possiveis direcoes que o harry pode andar 
    enum Direcao { NENHUMA, ESQUERDA, DIREITA, CIMA, BAIXO };
    // Inicia a direçao seja nenhuma, ou seja, neutra e parada
    Direcao direcaoAtual = NENHUMA;
    // O jogo inicia com 3 vidas do Pacman
-   int vidas = 20;
+   int vidas = QUANT_VIDAS;
    Direcao proximaDirecao = NENHUMA;
       // Música de fundo
    sf::Music music;
@@ -655,21 +654,21 @@ if (atual == ANDAMENTO && !jogoFinalizado && !ghost4Preso) {
          window.draw(ghost2);
          window.draw(ghost3);
          window.draw(ghost4);
+         if(atual == ANDAMENTO && !semVida){
+            for (int i = 0; i < vidas; ++i) {
+               vida.setPosition(35 + i * 40, 1050); // espaçamento horizontal
+               window.draw(vida);
+            }
+      }
 
-
-         for (int i = 0; i < vidas; ++i) {
-            vida.setPosition(35 + i * 40, 1050); // espaçamento horizontal
-            window.draw(vida);
-         }
-
-         if(jogoFinalizado){
-               if(semVida){
-                  window.draw(acabouVida);
-                  if(!musicaSemVidaPlay){
-                     music.stop();
+         if(jogoFinalizado){//Se o jogo finalizou
+               if(semVida){ // E acabou as vidas
+                  window.draw(acabouVida); // Informa que acabou as vidas
+                  if(!musicaSemVidaPlay){ //A musica de fim de jogo não tocou
+                     music.stop(); //Para a de fundo 
                      musicDead.setVolume(100);    // Volume de 0 a 100 (pode ajustar para menos se estiver muito alto)
-                     musicDead.play();         // Começa a tocar
-                     musicaSemVidaPlay = true;
+                     musicDead.play();         // Começa a tocar a musica de morte
+                     musicaSemVidaPlay = true; // Ativa o flaf que tocou a msusica de fim de jogo
                   }
                }
                else{
@@ -1130,7 +1129,7 @@ void reiniciarJogo(){
                      // Intenção de movimento 
                      proximaDirecao = NENHUMA;
                      // Quantidade de vidas
-                     vidas = 3;
+                     vidas = QUANT_VIDAS;
                      // Contador de pedra
                      contadorPedra = 0;
                      // Situações das músicas
