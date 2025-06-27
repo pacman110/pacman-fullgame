@@ -173,31 +173,39 @@ void soltarGhost(bool &preso, sf::Clock &clock, float atraso,
         clock.restart();
     }
 }
+   // Armazena o contador de pedra presente no mapa antes de iniciar o jogo
    int totalPedras = 0;
+   //Armazena as pedras coletadas
    int contadorPedra = 0;
+   
    // Define as possiveis situações do jogo   
    enum situacaoJogo {INICIO, ANDAMENTO};
    //Inicialmente está na situação de inicio
    situacaoJogo atual = INICIO;
+
    // Define as possiveis direcoes que o harry pode andar 
    enum Direcao { NENHUMA, ESQUERDA, DIREITA, CIMA, BAIXO };
    // Inicia a direçao seja nenhuma, ou seja, neutra e parada
    Direcao direcaoAtual = NENHUMA;
+   Direcao proximaDirecao = NENHUMA;
+
    // O jogo inicia com 3 vidas do Pacman
    int vidas = QUANT_VIDAS;
-   Direcao proximaDirecao = NENHUMA;
-      // Música de fundo
+
+   // Música de fundo
    sf::Music music;
 
 int main() {
-   copiarMapa(copiaMapa, mapa); // Copia o mapa do original para usar quando reiniciar o mapa
+   // Copia o mapa do original para usar quando reiniciar o mapa
+   copiarMapa(copiaMapa, mapa); 
+
    sf::RenderWindow window(sf::VideoMode(980, 1085), "Pac-Wizard: A cacada em Hogwarts");
 
-    // shape da parede
-    sf::RectangleShape rectangle(sf::Vector2f(SIZE, SIZE));
-    rectangle.setFillColor(sf::Color(0, 255, 255));
-    rectangle.setOutlineThickness(-5);
-    rectangle.setOutlineColor(sf::Color(50, 50, 50));
+   // shape da parede
+   sf::RectangleShape rectangle(sf::Vector2f(SIZE, SIZE));
+   rectangle.setFillColor(sf::Color(0, 255, 255));
+   rectangle.setOutlineThickness(-5);
+   rectangle.setOutlineColor(sf::Color(50, 50, 50));
    
    // Criando os sprites do Harry em todas posições possiveis
    sf::Sprite pac, pac_up, pac_down, pac_left, pac_right;
@@ -294,9 +302,11 @@ int main() {
         // verifica todos os eventos que foram acionados na janela desde a última iteração do loop
         sf::Event event;
         while (window.pollEvent(event)) {
+
             // evento "fechar" acionado: fecha a janela
             if (event.type == sf::Event::Closed)
                 window.close();
+   
             // Se o botão for pressionado e for enter, jogo inicia novamente, caso esteja na situação de finalizado ou inicio, para andamento
             if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Enter){
                if (atual == INICIO) { // Se a situação do jogo for inicio, muda para andamento e reinicia o relogio do jogo
@@ -573,7 +583,7 @@ if (atual == ANDAMENTO && !jogoFinalizado && !ghost4Preso) {
             semVida = true; // Ativa o flag para mostrar notificar que está "sem vida"
          }
          else{
-             // Caso  ainda tiver vidas
+            // Caso  ainda tiver vidas
             aguardaReinicio = true;         // Atualiza o estado para aguardando reinício
             clockReinicio.restart();         // Reinicia o relógio para contar 1 segundo
             perdeuVida = true;               // Ativa O flag para mostrar notificar que "perdeu vida"
@@ -625,19 +635,18 @@ if (atual == ANDAMENTO && !jogoFinalizado && !ghost4Preso) {
     window.clear(sf::Color::Black);
     // desenha o fundo da tela (imagem única)
     window.draw(spriteFundo);
-
         // desenha paredes
-        for(int i=0;i<31;i++)
+      for(int i=0;i<31;i++)
             for(int j=0;j<29;j++){
-                if (mapa[i][j]=='1') {
-                   spriteParede.setPosition(j*SIZE, i*SIZE);
-                    window.draw(spriteParede);
-                }
-                else if(mapa[i][j] == '2'){
-                    // Pega a posição da coluna e da linha, ajusta para o centro
-                    pedra.setPosition(j*SIZE + SIZE/2.0f, i*SIZE + SIZE/2.0f); 
-                    window.draw(pedra);
-                }
+               if (mapa[i][j]=='1') {
+                  spriteParede.setPosition(j*SIZE, i*SIZE); 
+                  window.draw(spriteParede);
+               }
+               else if(mapa[i][j] == '2'){
+                  // Pega a posição da coluna e da linha, ajusta para o centro
+                  pedra.setPosition(j*SIZE + SIZE/2.0f, i*SIZE + SIZE/2.0f); 
+                  window.draw(pedra);
+               }
             }
         // desenha o PacMan na posição atual
         pac.setPosition(posx * SIZE + SIZE / 2.0f, posy * SIZE + SIZE / 2.0f);
@@ -654,7 +663,7 @@ if (atual == ANDAMENTO && !jogoFinalizado && !ghost4Preso) {
          window.draw(ghost2);
          window.draw(ghost3);
          window.draw(ghost4);
-         if(atual == ANDAMENTO && !semVida){
+         if(atual == ANDAMENTO && !semVida){ // Se estiver rodando o jogo e tiver vida
             for (int i = 0; i < vidas; ++i) {
                vida.setPosition(35 + i * 40, 1050); // espaçamento horizontal
                window.draw(vida);
@@ -681,10 +690,10 @@ if (atual == ANDAMENTO && !jogoFinalizado && !ghost4Preso) {
                   }
             }
          }
-         else if (perdeuVida){
-            window.draw(reduzirVida);
+         else if (perdeuVida){ //Perdeu vida
+            window.draw(reduzirVida); // Imprime a mensgaem de diminuir vida
          }
-         else if (atual == ANDAMENTO){
+         else if (atual == ANDAMENTO){ 
             window.draw(pontuacao);
             window.draw(temporizador);
          }
@@ -1119,31 +1128,41 @@ void reiniciarJogo(){
                      // Restaura o mapa original
                      copiarMapa(mapa, copiaMapa);
                      posx = 1; posy = 29; // Posição do Harry
+
                      //Posições dos Ghosts
                      ghost1X = 11.2; ghost1Y = 14; ghost1Preso = true;
                      ghost2X = 12.5; ghost2Y = 14; ghost2Preso = true;
                      ghost3X = 14;   ghost3Y = 14; ghost3Preso = true;
                      ghost4X = 15.5; ghost4Y = 14; ghost4Preso = true;
+
                      // Direção do Harry
                      direcaoAtual = NENHUMA;
                      // Intenção de movimento 
                      proximaDirecao = NENHUMA;
                      // Quantidade de vidas
                      vidas = QUANT_VIDAS;
+
                      // Contador de pedra
                      contadorPedra = 0;
+
                      // Situações das músicas
                      musicaFinalPlay = false;
                      musicaSemVidaPlay = false;
+
                      // Situações das vidas
                      semVida = false;
                      perdeuVida = false;
+
+                     // Situação para reiniciar o jogo
                      aguardaReinicio = false;
+
                      // Situação da música de fundo
                      music.stop();
                      music.play();
-                     // atualiza para um jogo que não iniciou/ não finalizou
+
+                     // Situação do fim do jogo
                      jogoFinalizado = false;
+
                      // Muda para situação de andamento
                      atual = ANDAMENTO;
 }
