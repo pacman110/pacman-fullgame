@@ -347,7 +347,6 @@ int main() {
             case DIREITA:  testeX++; break;
             case CIMA:    testeY--; break;
             case BAIXO:   testeY++; break;
-            default: break;
          }
     //se possivel, transforma a proxima direcao na direcao atual//
       if (podeMover(testeX, testeY)) {
@@ -360,7 +359,6 @@ int main() {
                   case DIREITA:  pac = pac_right; break;
                   case CIMA:    pac = pac_up; break;
                   case BAIXO:   pac = pac_down; break;
-                  default: break;
                }
          }
       }
@@ -375,7 +373,6 @@ int main() {
                   case DIREITA:  nextX++; break;
                   case CIMA:    nextY--; break;
                   case BAIXO:   nextY++; break;
-                  default: break;
             }
 
          if (podeMover(nextX, nextY)) {
