@@ -94,6 +94,30 @@ bool semVida = false; // situação das vidas do Harry
 bool perdeuVida = false; // se perdeu uma vida
 bool aguardaReinicio = false; // Se perder uma vida, indica se o jogo está aguardando um minuto para inciar
 
+//FRUTAS
+bool invulneravel = false;
+sf::Clock clockInvulneravel;
+double tempoInvulneravel = 10.0f; // 10 segundos de invulnerabilidade
+sf::Sprite frutaInvulneravel;
+bool frutaAtiva = false;
+int posFrutaX, posFrutaY;
+sf::Clock clockFruta;
+double tempoEntreFrutas = 20.0f; // Aparece a cada 20 segundos
+
+// VASSOURA (VELOCIDADE)
+bool vassouraAtiva = false;
+int posVassouraX, posVassouraY;
+sf::Sprite vassoura;
+sf::Clock clockVassoura;
+double tempoEntreVassouras = 25.0f;
+bool velocidadeAumentada = false;
+sf::Clock clockVelocidade;
+double tempoVelocidade = 8.0f;
+double velocidadeNormal = 0.2f;
+double velocidadeBoost = 0.1f;
+sf::SoundBuffer bufferVassoura;
+sf::Sound somVassoura;
+
 // PROTOTIPO DE FUNCOES
 // Realiza uma cópia do mapa original para não se perder quando reiniciar o jogo
 void copiarMapa(char copiaOriginal[31][30], char mapa[31][30]);
@@ -130,6 +154,37 @@ void defineGhost(
     sf::Sprite &ghost2, sf::Sprite &ghost2_left, sf::Sprite &ghost2_up, sf::Sprite &ghost2_down, sf::Sprite &ghost2_right,
     sf::Sprite &ghost3, sf::Sprite &ghost3_left, sf::Sprite &ghost3_up, sf::Sprite &ghost3_down, sf::Sprite &ghost3_right,
     sf::Sprite &ghost4, sf::Sprite &ghost4_left, sf::Sprite &ghost4_up, sf::Sprite &ghost4_down, sf::Sprite &ghost4_right);
+
+
+
+
+
+
+//Funcao Frutas
+void defineFruta(sf::Sprite &fruta) {
+    static sf::Texture texturaFruta;
+    if (!texturaFruta.loadFromFile("resources/fruta.png")) {
+        std::cout << "Erro lendo imagem fruta.png\n";
+    }
+    sf::Vector2u tamanhoTextura = texturaFruta.getSize();
+    fruta.setTexture(texturaFruta);
+    fruta.setOrigin(tamanhoTextura.x / 2.0f, tamanhoTextura.y / 2.0f);
+    fruta.setScale(0.7f, 0.7f);
+}
+
+//Vassoura
+void defineVassoura(sf::Sprite &vassouraSprite) {
+    static sf::Texture texturaVassoura;
+    if (!texturaVassoura.loadFromFile("resources/vassoura.png")) {
+        std::cout << "Erro lendo imagem vassoura.png\n";
+    }
+    vassouraSprite.setTexture(texturaVassoura);
+    vassouraSprite.setOrigin(texturaVassoura.getSize().x / 2.0f, texturaVassoura.getSize().y / 2.0f);
+    vassouraSprite.setScale(0.7f, 0.7f);
+}
+
+
+
 
 
 // Função que verifica se uma coordenada (x, y) é válida para movimentação
@@ -195,12 +250,17 @@ void soltarGhost(bool &preso, sf::Clock &clock, float atraso,
    // Música de fundo
    sf::Music music;
 
+   sf::SoundBuffer bufferFruta;
+   sf::Sound somFruta;
+
+   sf::Font font;
 int main() {
    // Copia o mapa do original para usar quando reiniciar o mapa
    copiarMapa(copiaMapa, mapa); 
 
    sf::RenderWindow window(sf::VideoMode(980, 1085), "Pac-Wizard: A cacada em Hogwarts");
-
+         
+         
    // shape da parede
    sf::RectangleShape rectangle(sf::Vector2f(SIZE, SIZE));
    rectangle.setFillColor(sf::Color(0, 255, 255));
@@ -219,6 +279,8 @@ int main() {
    sf::Sprite vida;
    // Define atributos da vida
    defineVida(vida);
+   defineFruta(frutaInvulneravel);
+   defineVassoura(vassoura);
 
     sf::Sprite ghost1;        //  Criando objeto sprite ghost1
     sf::Sprite ghost1_left;
@@ -244,6 +306,7 @@ int main() {
     sf::Sprite ghost4_down;
     sf::Sprite ghost4_right;
 
+
     // Função para definir o sprite dos dementadores
     defineGhost(ghost1, ghost1_left, ghost1_up, ghost1_down, ghost1_right,
                ghost2, ghost2_left, ghost2_up, ghost2_down, ghost2_right,
@@ -255,7 +318,7 @@ int main() {
    defineTiles(spriteFundo, spriteParede);
 
 
-
+   
    sf::Music musicEndGame; // Musica de fim de jogo
    sf::Music musicDead; // Musica de fim de vida
    sf::SoundBuffer bufferVida; //Buffer para quando perder vida
@@ -266,9 +329,21 @@ int main() {
    somVida.setBuffer(bufferVida);
 
 
+   //som ao pegar a Fruta
+   if (!bufferFruta.loadFromFile("resources/sounds/hp_fruta.ogg")) {
+    std::cout << "Erro ao carregar som da fruta!\n";
+   }
+   somFruta.setBuffer(bufferFruta);
+   
+   
+   //som ao pegar a vassoura
+   if (!bufferVassoura.loadFromFile("resources/sounds/hp_vassoura.ogg")) {
+    std::cout << "Erro ao carregar som da vassoura!\n";
+}
+   somVassoura.setBuffer(bufferVassoura);
+
    DefineMusic(music, musicEndGame, musicDead);
 
-   sf::Font font; // Carregando a fonte da pontuacao
    if (!font.loadFromFile("resources/fonts/upheavtt.ttf")) { 
    std::cout << "Erro carregando fonte\n";
    return 0;
@@ -335,8 +410,9 @@ int main() {
         }
 
       // a cada 0.2 segundos, atualiza a posicao automaticamente do pacman//
-      if (atual == ANDAMENTO && !jogoFinalizado && clockAndar.getElapsedTime() > sf::seconds(0.2)) {
-      clockAndar.restart(); // reinicia o relogio para o próximo intervalo 
+      double intervaloMovimento = velocidadeAumentada ? velocidadeBoost : velocidadeNormal;
+      if (atual == ANDAMENTO && !jogoFinalizado && clockAndar.getElapsedTime() > sf::seconds(intervaloMovimento)) {
+         clockAndar.restart(); // reinicia o relogio para o próximo intervalo 
       // verifica se a proxima direcao pode ser executada usando um teste//
       if (proximaDirecao != NENHUMA && podeMover) {
          int testeX = posx;
@@ -385,7 +461,6 @@ int main() {
          }
          
 
-         
          // verifica pedras e atualiza contador e fim de jogo
          if (mapa[posy][posx] == '2') { // se a posição atual do harry for '2', ou seja, a uma pedra (pilula)
             mapa[posy][posx] = '0'; // atualiza e retira a pedra 
@@ -566,6 +641,104 @@ if (atual == ANDAMENTO && !jogoFinalizado && !ghost4Preso) {
     if ((int)ghost4X >= 27) ghost4X = 1;
 };
 
+
+// Se Harry estiver invulnerável, todos os fantasmas se movem aleatoriamente
+if (invulneravel) {
+    // Movimento aleatório para todos os fantasmas
+    if (!ghost1Preso && clockGhost1.getElapsedTime().asSeconds() > 0.1f) {
+        int dx[] = {0, 0, -1, 1};
+        int dy[] = {-1, 1, 0, 0};
+        bool moveu = false;
+
+        for (int tentativas = 0; tentativas < 4 && !moveu; tentativas++) {
+            int dir = rand() % 4;
+            int proxX = (int)ghost1X + dx[dir];
+            int proxY = (int)ghost1Y + dy[dir];
+
+            if (podeMoverGhost(proxX, proxY)) {
+                ghost1X = proxX;
+                ghost1Y = proxY;
+                if (dir == 0) ghost1 = ghost1_up;
+                else if (dir == 1) ghost1 = ghost1_down;
+                else if (dir == 2) ghost1 = ghost1_left;
+                else if (dir == 3) ghost1 = ghost1_right;
+                moveu = true;
+            }
+        }
+        clockGhost1.restart();
+    }
+
+    if (!ghost2Preso && clockGhost2.getElapsedTime().asSeconds() > 0.1f) {
+        int dx[] = {0, 0, -1, 1};
+        int dy[] = {-1, 1, 0, 0};
+        bool moveu = false;
+
+        for (int tentativas = 0; tentativas < 4 && !moveu; tentativas++) {
+            int dir = rand() % 4;
+            int proxX = (int)ghost2X + dx[dir];
+            int proxY = (int)ghost2Y + dy[dir];
+
+            if (podeMoverGhost(proxX, proxY)) {
+                ghost2X = proxX;
+                ghost2Y = proxY;
+                if (dir == 0) ghost2 = ghost2_up;
+                else if (dir == 1) ghost2 = ghost2_down;
+                else if (dir == 2) ghost2 = ghost2_left;
+                else if (dir == 3) ghost2 = ghost2_right;
+                moveu = true;
+            }
+        }
+        clockGhost2.restart();
+    }
+
+    if (!ghost3Preso && clockGhost3.getElapsedTime().asSeconds() > 0.1f) {
+        int dx[] = {0, 0, -1, 1};
+        int dy[] = {-1, 1, 0, 0};
+        bool moveu = false;
+
+        for (int tentativas = 0; tentativas < 4 && !moveu; tentativas++) {
+            int dir = rand() % 4;
+            int proxX = (int)ghost3X + dx[dir];
+            int proxY = (int)ghost3Y + dy[dir];
+
+            if (podeMoverGhost(proxX, proxY)) {
+                ghost3X = proxX;
+                ghost3Y = proxY;
+                if (dir == 0) ghost3 = ghost3_up;
+                else if (dir == 1) ghost3 = ghost3_down;
+                else if (dir == 2) ghost3 = ghost3_left;
+                else if (dir == 3) ghost3 = ghost3_right;
+                moveu = true;
+            }
+        }
+        clockGhost3.restart();
+    }
+
+    if (!ghost4Preso && clockGhost4.getElapsedTime().asSeconds() > 0.1f) {
+        int dx[] = {0, 0, -1, 1};
+        int dy[] = {-1, 1, 0, 0};
+        bool moveu = false;
+
+        for (int tentativas = 0; tentativas < 4 && !moveu; tentativas++) {
+            int dir = rand() % 4;
+            int proxX = (int)ghost4X + dx[dir];
+            int proxY = (int)ghost4Y + dy[dir];
+
+            if (podeMoverGhost(proxX, proxY)) {
+                ghost4X = proxX;
+                ghost4Y = proxY;
+                if (dir == 0) ghost4 = ghost4_up;
+                else if (dir == 1) ghost4 = ghost4_down;
+                else if (dir == 2) ghost4 = ghost4_left;
+                else if (dir == 3) ghost4 = ghost4_right;
+                moveu = true;
+            }
+        }
+        clockGhost4.restart();
+    }
+}
+
+
    if(atual == ANDAMENTO && !jogoFinalizado && !aguardaReinicio &&      
    (
       colisaoHarry(ghost1X, ghost1Y, posx, posy)||
@@ -609,6 +782,62 @@ if (atual == ANDAMENTO && !jogoFinalizado && !ghost4Preso) {
          clockGhost4.restart();
       }
 
+   
+   //Aparecimento de frutas
+      if(atual == ANDAMENTO && !jogoFinalizado && !frutaAtiva && 
+   clockFruta.getElapsedTime().asSeconds() > tempoEntreFrutas) {
+    // Encontra uma posição aleatória válida para a fruta
+    do {
+        posFrutaX = rand() % 28;
+        posFrutaY = rand() % 31;
+      } while(mapa[posFrutaY][posFrutaX] != '0' || 
+           (posFrutaX == posx && posFrutaY == posy));
+    
+      frutaAtiva = true;
+      }
+
+   // Verifica colisão com a fruta
+   if(frutaAtiva && posx == posFrutaX && posy == posFrutaY) {
+      frutaAtiva = false;
+      invulneravel = true;
+      clockInvulneravel.restart();
+      clockFruta.restart();
+      somFruta.play();
+      }
+
+   //Verifica o tempo de invulnerabilidade
+   if(invulneravel && clockInvulneravel.getElapsedTime().asSeconds() > tempoInvulneravel) {
+      invulneravel = false;
+   }
+
+
+   // Aparecimento da vassoura
+   if (atual == ANDAMENTO && !jogoFinalizado && !vassouraAtiva && 
+      clockVassoura.getElapsedTime().asSeconds() > tempoEntreVassouras) {
+   // Encontra uma posição aleatória válida para a vassoura
+      do {
+        posVassouraX = rand() % 28;
+        posVassouraY = rand() % 31;
+      } 
+      while (mapa[posVassouraY][posVassouraX] != '0' || 
+        (posVassouraX == posx && posVassouraY == posy));
+    
+    vassouraAtiva = true;
+}
+
+   // Verifica colisão com a vassoura
+   if (vassouraAtiva && posx == posVassouraX && posy == posVassouraY) {
+    vassouraAtiva = false;
+    velocidadeAumentada = true;
+    clockVelocidade.restart();
+    clockVassoura.restart();
+    somVassoura.play(); // Toca o som ao pegar a vassoura
+}
+
+   // Verifica o tempo de velocidade aumentada
+   if (velocidadeAumentada && clockVelocidade.getElapsedTime().asSeconds() > tempoVelocidade) {
+    velocidadeAumentada = false;
+}
    //-------------------------IMPRESSÃO DE TEXTO ----------------------------
 
    // Temporizador
@@ -645,9 +874,36 @@ if (atual == ANDAMENTO && !jogoFinalizado && !ghost4Preso) {
                   window.draw(pedra);
                }
             }
-        // desenha o PacMan na posição atual
-        pac.setPosition(posx * SIZE + SIZE / 2.0f, posy * SIZE + SIZE / 2.0f);
-        
+
+         
+        //Desenha a Fruta
+        if(frutaAtiva) {
+         frutaInvulneravel.setPosition(posFrutaX * SIZE + SIZE / 2.0f, 
+                                 posFrutaY * SIZE + SIZE / 2.0f);
+         window.draw(frutaInvulneravel);
+      }
+
+         //faz o harry piscar
+         pac.setPosition(posx * SIZE + SIZE / 2.0f, posy * SIZE + SIZE / 2.0f);
+         if(invulneravel) {
+         // Efeito de piscar com transparência
+          static sf::Clock clockPiscar;
+         // Alterna entre visível (alpha=200) e semi-transparente (alpha=100) a cada 0.2 segundos
+         int alpha = ((int)(clockPiscar.getElapsedTime().asSeconds() * 5) % 2 == 0) ? 150 : 50;
+         pac.setColor(sf::Color(255, 255, 255, alpha));  // Branco com transparência variável
+         } 
+         else {
+         pac.setColor(sf::Color::White);  // Volta ao normal (totalmente opaco)
+         }
+         window.draw(pac);
+
+         // Desenha a vassoura
+         if (vassouraAtiva) {
+            vassoura.setPosition(posVassouraX * SIZE + SIZE / 2.0f, 
+               posVassouraY * SIZE + SIZE / 2.0f);
+            window.draw(vassoura);
+}
+
         //desenha o ghost na posição atual
         ghost1.setPosition(ghost1X * SIZE + SIZE / 2.0f, ghost1Y * SIZE + SIZE / 2.0f);
         ghost2.setPosition(ghost2X * SIZE + SIZE / 2.0f, ghost2Y * SIZE + SIZE / 2.0f);
@@ -709,6 +965,9 @@ if (atual == ANDAMENTO && !jogoFinalizado && !ghost4Preso) {
       return 0;
 }
 bool colisaoHarry(double ghostX, double ghostY, int posx, int posy, double tolerancia){
+      if(invulneravel){
+         return false;
+      }
       if((ghostX >= posx - tolerancia && ghostX <= posx + tolerancia) &&
          (ghostY >= posy - tolerancia && ghostY <= posy + tolerancia))
             return true;
@@ -1153,6 +1412,11 @@ void reiniciarJogo(){
                      // Situação para reiniciar o jogo
                      aguardaReinicio = false;
 
+                     //resetar frutas
+                     invulneravel = false;
+                     frutaAtiva = false;
+                     clockFruta.restart();
+                     clockInvulneravel.restart();
                      // Situação da música de fundo
                      music.stop();
                      music.play();
