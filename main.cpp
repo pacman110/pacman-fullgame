@@ -482,7 +482,10 @@ if (!bufferVassouraAparece.loadFromFile("resources/sounds/hp_vassoura_aparece.og
                   direcaoAtual = NENHUMA;
             }
          }
-         
+
+          //(teletransporte do pac de um lado para outo)
+         if (posx < 0) posx = 27;     
+         if (posx > 27) posx = 0;
 
          // verifica pedras e atualiza contador e fim de jogo
          if (mapa[posy][posx] == '2') { // se a posição atual do harry for '2', ou seja, a uma pedra (pilula)
@@ -493,9 +496,7 @@ if (!bufferVassouraAparece.loadFromFile("resources/sounds/hp_vassoura_aparece.og
                   jogoFinalizado = true; // a situacao do jogo muda e finaliza o jogo
          }
       }
-    //(teletransporte do pac de um lado para outo)
-    if (posx < 0) posx = 27;     
-    if (posx > 27) posx = 0; 
+    
 
 // ------------------- Liberação dos fantasmas da jaula -------------------
 // Chama a função soltarGhost para cada fantasma, que vai movê-los da jaula
