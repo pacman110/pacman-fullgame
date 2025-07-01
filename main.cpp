@@ -103,6 +103,8 @@ bool frutaAtiva = false;
 int posFrutaX, posFrutaY;
 sf::Clock clockFruta;
 double tempoEntreFrutas = 20.0f; // Aparece a cada 20 segundos
+sf::SoundBuffer bufferFrutaAparece;
+sf::Sound somFrutaAparece;
 
 // VASSOURA (VELOCIDADE)
 bool vassouraAtiva = false;
@@ -117,6 +119,8 @@ double velocidadeNormal = 0.2f;
 double velocidadeBoost = 0.1f;
 sf::SoundBuffer bufferVassoura;
 sf::Sound somVassoura;
+sf::SoundBuffer bufferVassouraAparece;
+sf::Sound somVassouraAparece;
 
 // PROTOTIPO DE FUNCOES
 // Realiza uma cópia do mapa original para não se perder quando reiniciar o jogo
@@ -193,8 +197,13 @@ bool podeMover(int x, int y) {                                        // Verific
    return x >=-1 && x < 29 && y >= 0 && y < 31 && mapa[y][x] != '1';  // Verifica se y está entre 0 e 30 (linhas válidas do mapa)
 }                                                                     // Verifica se o caractere naquela posição não é '1' (parede)
 
-// Verifica se o movimento é válido para fantasmas (impede reentrada na jaula
 
+// Função para verificar se uma posição está dentro da jaula dos fantasmas
+bool estaNaJaula(int x, int y) {
+    return (y >= 12 && y <= 15) && (x >= 11 && x <= 15);
+}
+
+// Verifica se o movimento é válido para fantasmas (impede reentrada na jaula
 bool podeMoverGhost(int x, int y) {
     // Impede retorno à jaula (linhas 12 a 15, colunas 11 a 15)
     if ((y >= 12 && y <= 15) && (x >= 11 && x <= 15)) {
@@ -254,6 +263,7 @@ void soltarGhost(bool &preso, sf::Clock &clock, float atraso,
    sf::Sound somFruta;
 
    sf::Font font;
+   
 int main() {
    // Copia o mapa do original para usar quando reiniciar o mapa
    copiarMapa(copiaMapa, mapa); 
@@ -341,6 +351,19 @@ int main() {
     std::cout << "Erro ao carregar som da vassoura!\n";
 }
    somVassoura.setBuffer(bufferVassoura);
+
+
+//som ao aparecer a fruta
+   if (!bufferFrutaAparece.loadFromFile("resources/sounds/hp_fruta_aparece.ogg")) {
+    std::cout << "Erro ao carregar som da fruta aparecendo!\n";
+}
+   somFrutaAparece.setBuffer(bufferFrutaAparece);
+
+//som ao aparecer a vassoura
+if (!bufferVassouraAparece.loadFromFile("resources/sounds/hp_vassoura_aparece.ogg")) {
+    std::cout << "Erro ao carregar som da vassoura aparecendo!\n";
+}
+   somVassouraAparece.setBuffer(bufferVassouraAparece);
 
    DefineMusic(music, musicEndGame, musicDead);
 
@@ -790,10 +813,12 @@ if (invulneravel) {
     do {
         posFrutaX = rand() % 28;
         posFrutaY = rand() % 31;
-      } while(mapa[posFrutaY][posFrutaX] != '0' || 
-           (posFrutaX == posx && posFrutaY == posy));
-    
+      }  while (mapa[posFrutaY][posFrutaX] != '0' || 
+            (posFrutaX == posx && posFrutaY == posy) ||
+            estaNaJaula(posFrutaX, posFrutaY)); //Evita aparecer na jaula
+
       frutaAtiva = true;
+      somFrutaAparece.play(); // Toca o som quando a fruta aparece
       }
 
    // Verifica colisão com a fruta
@@ -820,9 +845,11 @@ if (invulneravel) {
         posVassouraY = rand() % 31;
       } 
       while (mapa[posVassouraY][posVassouraX] != '0' || 
-        (posVassouraX == posx && posVassouraY == posy));
+            (posVassouraX == posx && posVassouraY == posy) ||
+            estaNaJaula(posVassouraX, posVassouraY)); //Evita aparecer na jaula
     
     vassouraAtiva = true;
+    somVassouraAparece.play(); // Toca o som quando a vassoura aparece
 }
 
    // Verifica colisão com a vassoura
