@@ -52,6 +52,9 @@ int posx = 1;       // posicao do PacMan
 int posy = 29;
 int testeX;
 int testeY;
+
+int pontuacaoTotal = 0; // Variável para armazenar a pontuação total
+
 // posicao ghost
 double ghost1X = 11.2;
 double ghost1Y = 14; 
@@ -94,33 +97,35 @@ bool semVida = false; // situação das vidas do Harry
 bool perdeuVida = false; // se perdeu uma vida
 bool aguardaReinicio = false; // Se perder uma vida, indica se o jogo está aguardando um minuto para inciar
 
-//FRUTAS
-bool invulneravel = false;
-sf::Clock clockInvulneravel;
+//CAPAS
+bool invulneravel = false; // Indica se o Harry esta atualmente invulneravel (com a capa)
+sf::Clock clockInvulneravel; // Relogio para controlar o tempo de duração da invulnerabilidade
 double tempoInvulneravel = 10.0f; // 10 segundos de invulnerabilidade
-sf::Sprite frutaInvulneravel;
-bool frutaAtiva = false;
-int posFrutaX, posFrutaY;
-sf::Clock clockFruta;
-double tempoEntreFrutas = 20.0f; // Aparece a cada 20 segundos
-sf::SoundBuffer bufferFrutaAparece;
-sf::Sound somFrutaAparece;
+sf::Sprite capaInvulneravel; // Sprite da capa
+bool capaAtiva = false; // Indica se a capa esta no mapa
+int posCapaX, posCapaY; // Posição da capa no mapa
+sf::Clock clockCapa; // Relogio para controlar o tempo entre aparicoes da capa
+double tempoEntreCapas = 20.0f; // Aparece a cada 20 segundos
+sf::SoundBuffer bufferCapaAparece; // buffer de som aparecimento da capa
+sf::Sound somCapaAparece; // som quando a capa aparece
+sf::SoundBuffer bufferCapa; // buffer de som ao pegar a capa
+sf::Sound somCapa; // som ao pegar a capa
 
 // VASSOURA (VELOCIDADE)
-bool vassouraAtiva = false;
-int posVassouraX, posVassouraY;
-sf::Sprite vassoura;
-sf::Clock clockVassoura;
-double tempoEntreVassouras = 25.0f;
-bool velocidadeAumentada = false;
-sf::Clock clockVelocidade;
-double tempoVelocidade = 8.0f;
-double velocidadeNormal = 0.2f;
-double velocidadeBoost = 0.1f;
-sf::SoundBuffer bufferVassoura;
-sf::Sound somVassoura;
-sf::SoundBuffer bufferVassouraAparece;
-sf::Sound somVassouraAparece;
+bool vassouraAtiva = false; //indica se a vassoura esta no mapa
+int posVassouraX, posVassouraY; // posicao da vassoura no mapa
+sf::Sprite vassoura; // sprite da vassoura
+sf::Clock clockVassoura; //tempo de aparecimento das vassouras
+double tempoEntreVassouras = 25.0f; //tempo para vassoura reaparecer
+bool velocidadeAumentada = false; // indica se o harry esta com a velocidade aumentads (com a vassoura)
+sf::Clock clockVelocidade; // relogio de controle do tempo de duracao do efeito
+double tempoVelocidade = 8.0f; // tempo de duracao do efeito
+double velocidadeNormal = 0.2f; //velocidade normal do harry
+double velocidadeBoost = 0.1f; // velocidade aumentada do harry
+sf::SoundBuffer bufferVassoura; // buffer de som quando pega a vassoura
+sf::Sound somVassoura; // som quando pega a vassoura
+sf::SoundBuffer bufferVassouraAparece; // buffer de som quando a vassoura aparece
+sf::Sound somVassouraAparece; // som quando a vassoura aparece
 
 // PROTOTIPO DE FUNCOES
 // Realiza uma cópia do mapa original para não se perder quando reiniciar o jogo
@@ -164,19 +169,19 @@ void defineGhost(
 
 
 
-//Funcao Frutas
-void defineFruta(sf::Sprite &fruta) {
-    static sf::Texture texturaFruta;
-    if (!texturaFruta.loadFromFile("resources/fruta.png")) {
-        std::cout << "Erro lendo imagem fruta.png\n";
+// Funcao para configurar o sprite da capa de invisibilidade
+void defineCapa(sf::Sprite &capa) {
+    static sf::Texture texturaCapa;
+    if (!texturaCapa.loadFromFile("resources/capa.png")) {
+        std::cout << "Erro lendo imagem capa.png\n";
     }
-    sf::Vector2u tamanhoTextura = texturaFruta.getSize();
-    fruta.setTexture(texturaFruta);
-    fruta.setOrigin(tamanhoTextura.x / 2.0f, tamanhoTextura.y / 2.0f);
-    fruta.setScale(0.7f, 0.7f);
+    sf::Vector2u tamanhoTextura = texturaCapa.getSize();
+    capa.setTexture(texturaCapa);
+    capa.setOrigin(tamanhoTextura.x / 2.0f, tamanhoTextura.y / 2.0f);
+    capa.setScale(0.7f, 0.7f);
 }
 
-//Vassoura
+// Funcao para configurar o sprite da vassoura
 void defineVassoura(sf::Sprite &vassouraSprite) {
     static sf::Texture texturaVassoura;
     if (!texturaVassoura.loadFromFile("resources/vassoura.png")) {
@@ -200,11 +205,15 @@ bool podeMover(int x, int y) {                                        // Verific
 
 // Função para verificar se uma posição está dentro da jaula dos fantasmas
 bool estaNaJaula(int x, int y) {
-    return (y >= 12 && y <= 15) && (x >= 11 && x <= 15);
+    return (y >= 12 && y <= 16) && (x >= 11 && x <= 16);
 }
 
 // Verifica se o movimento é válido para fantasmas (impede reentrada na jaula
 bool podeMoverGhost(int x, int y) {
+   if (jogoFinalizado && invulneravel) { //impede que os fantasmas se movam quando o harry ganha o jogo com a capa
+        return false;
+    }
+
     // Impede retorno à jaula (linhas 12 a 15, colunas 11 a 15)
     if ((y >= 12 && y <= 15) && (x >= 11 && x <= 15)) {
         return false;
@@ -259,9 +268,6 @@ void soltarGhost(bool &preso, sf::Clock &clock, float atraso,
    // Música de fundo
    sf::Music music;
 
-   sf::SoundBuffer bufferFruta;
-   sf::Sound somFruta;
-
    sf::Font font;
    
 int main() {
@@ -289,7 +295,7 @@ int main() {
    sf::Sprite vida;
    // Define atributos da vida
    defineVida(vida);
-   defineFruta(frutaInvulneravel);
+   defineCapa(capaInvulneravel);
    defineVassoura(vassoura);
 
     sf::Sprite ghost1;        //  Criando objeto sprite ghost1
@@ -339,11 +345,11 @@ int main() {
    somVida.setBuffer(bufferVida);
 
 
-   //som ao pegar a Fruta
-   if (!bufferFruta.loadFromFile("resources/sounds/hp_fruta.ogg")) {
-    std::cout << "Erro ao carregar som da fruta!\n";
+   //som ao pegar a Capa
+   if (!bufferCapa.loadFromFile("resources/sounds/hp_capa.ogg")) {
+    std::cout << "Erro ao carregar som da capa!\n";
    }
-   somFruta.setBuffer(bufferFruta);
+   somCapa.setBuffer(bufferCapa);
    
    
    //som ao pegar a vassoura
@@ -353,11 +359,11 @@ int main() {
    somVassoura.setBuffer(bufferVassoura);
 
 
-//som ao aparecer a fruta
-   if (!bufferFrutaAparece.loadFromFile("resources/sounds/hp_fruta_aparece.ogg")) {
-    std::cout << "Erro ao carregar som da fruta aparecendo!\n";
+//som ao aparecer a capa
+   if (!bufferCapaAparece.loadFromFile("resources/sounds/hp_capa_aparece.ogg")) {
+    std::cout << "Erro ao carregar som da capa aparecendo!\n";
 }
-   somFrutaAparece.setBuffer(bufferFrutaAparece);
+   somCapaAparece.setBuffer(bufferCapaAparece);
 
 //som ao aparecer a vassoura
 if (!bufferVassouraAparece.loadFromFile("resources/sounds/hp_vassoura_aparece.ogg")) {
@@ -433,26 +439,26 @@ if (!bufferVassouraAparece.loadFromFile("resources/sounds/hp_vassoura_aparece.og
         }
 
       // a cada 0.2 segundos, atualiza a posicao automaticamente do pacman//
-      double intervaloMovimento = velocidadeAumentada ? velocidadeBoost : velocidadeNormal;
+      double intervaloMovimento = velocidadeAumentada ? velocidadeBoost : velocidadeNormal; //Define o intervalo de movimento do Pacman/Harry baseado no estado de velocidade:
       if (atual == ANDAMENTO && !jogoFinalizado && clockAndar.getElapsedTime() > sf::seconds(intervaloMovimento)) {
          clockAndar.restart(); // reinicia o relogio para o próximo intervalo 
       // verifica se a proxima direcao pode ser executada usando um teste//
-      if (proximaDirecao != NENHUMA && podeMover) {
-         int testeX = posx;
+      if (proximaDirecao != NENHUMA && podeMover) { // Verifica se há uma direção solicitada (proximaDirecao não é NENHUMA) e se o movimento é possível
+         int testeX = posx; //Cria variáveis temporárias para testar a próxima posição sem alterar a posição atual
          int testeY = posy;
-
-         switch (proximaDirecao) {
+         
+         switch (proximaDirecao) { //testa a proxima direcao aumentando ou diminuindo x ou y
             case ESQUERDA: testeX--; break;
             case DIREITA:  testeX++; break;
             case CIMA:    testeY--; break;
             case BAIXO:   testeY++; break;
          }
-    //se possivel, transforma a proxima direcao na direcao atual//
-      if (podeMover(testeX, testeY)) {
-               direcaoAtual = proximaDirecao;
-               proximaDirecao = NENHUMA;
+   
+      if (podeMover(testeX, testeY)) { //Verifica se o movimento para a posição testada é válido (não é parede, está dentro do mapa)
+               direcaoAtual = proximaDirecao; // atualiza a direcao atual para a direcao solicitada
+               proximaDirecao = NENHUMA; // reseta a proxima direcao
                
-               // Atualiza o sprite conforme a movimentacao do harry//
+               // Atualiza o sprite conforme a movimentacao do harry
                switch (direcaoAtual) {
                   case ESQUERDA: pac = pac_left; break;
                   case DIREITA:  pac = pac_right; break;
@@ -462,28 +468,27 @@ if (!bufferVassouraAparece.loadFromFile("resources/sounds/hp_vassoura_aparece.og
          }
       }
 
-      //movimenta na direcao atual, ja conferindo a intencao de movimento//
-         if (direcaoAtual != NENHUMA) {
-            int nextX = posx;
+         if (direcaoAtual != NENHUMA) { //Se exite uma direção de movimento ativa...
+            int nextX = posx; //Cria variáveis para a próxima posição real
             int nextY = posy;
             
-            switch (direcaoAtual) {
+            switch (direcaoAtual) { //Calcula a próxima posição baseada na direção atual
                   case ESQUERDA: nextX--; break;
                   case DIREITA:  nextX++; break;
                   case CIMA:    nextY--; break;
                   case BAIXO:   nextY++; break;
             }
 
-         if (podeMover(nextX, nextY)) {
+         if (podeMover(nextX, nextY)) { //Se o movimento for válido, atualiza a posição do Harry
                   posx = nextX;
                   posy = nextY;
             } else {
-                  // Se não pode mover, para//
+                  // Se não for valido, para
                   direcaoAtual = NENHUMA;
             }
          }
 
-          //(teletransporte do pac de um lado para outo)
+          //(teletransporte do harry de um lado para outo)
          if (posx < 0) posx = 27;     
          if (posx > 27) posx = 0;
 
@@ -491,6 +496,7 @@ if (!bufferVassouraAparece.loadFromFile("resources/sounds/hp_vassoura_aparece.og
          if (mapa[posy][posx] == '2') { // se a posição atual do harry for '2', ou seja, a uma pedra (pilula)
             mapa[posy][posx] = '0'; // atualiza e retira a pedra 
             contadorPedra++; // soma a quantidade de pedras coletada 
+            pontuacaoTotal += 10; // 10 pontos por pedra
             std::cout << "Comidas: " << contadorPedra << std::endl; 
             if (contadorPedra == totalPedras)  // se o numero de pedras coletadas for igual a quantidade total do mapa
                   jogoFinalizado = true; // a situacao do jogo muda e finaliza o jogo
@@ -670,11 +676,13 @@ if (atual == ANDAMENTO && !jogoFinalizado && !ghost4Preso) {
 if (invulneravel) {
     // Movimento aleatório para todos os fantasmas
     if (!ghost1Preso && clockGhost1.getElapsedTime().asSeconds() > 0.1f) {
+      // vetores de direcao possiveis (cima baixo esquerda direita)
         int dx[] = {0, 0, -1, 1};
         int dy[] = {-1, 1, 0, 0};
         bool moveu = false;
 
-        for (int tentativas = 0; tentativas < 4 && !moveu; tentativas++) {
+         // tenta mover em direcao aleatoria ate 4 tentativas
+         for (int tentativas = 0; tentativas < 4 && !moveu; tentativas++) {
             int dir = rand() % 4;
             int proxX = (int)ghost1X + dx[dir];
             int proxY = (int)ghost1Y + dy[dir];
@@ -807,37 +815,45 @@ if (invulneravel) {
       }
 
    
-   //Aparecimento de frutas
-      if(atual == ANDAMENTO && !jogoFinalizado && !frutaAtiva && 
-   clockFruta.getElapsedTime().asSeconds() > tempoEntreFrutas) {
-    // Encontra uma posição aleatória válida para a fruta
+   //Aparecimento de capas
+      // verifica se pode aparecer nova capa
+      // jogo deve estar em andamento nao finalizado e sem capa ativa no mapa e o tempo do relogio deve ser maior que intervalo entre capas
+      if(atual == ANDAMENTO && !jogoFinalizado && !capaAtiva && 
+   clockCapa.getElapsedTime().asSeconds() > tempoEntreCapas) {
+    // Encontra uma posição aleatória válida para a capa
     do {
-        posFrutaX = rand() % 28;
-        posFrutaY = rand() % 31;
-      }  while (mapa[posFrutaY][posFrutaX] != '0' || 
-            (posFrutaX == posx && posFrutaY == posy) ||
-            estaNaJaula(posFrutaX, posFrutaY)); //Evita aparecer na jaula
+        posCapaX = rand() % 28;
+        posCapaY = rand() % 31;
+      } 
+      // repete enquanto: posicao nao for caminho livre (0), ou for mesma posicao do harry ou  ainda se estiver dentro da jaula 
+      while (mapa[posCapaY][posCapaX] != '0' || 
+            (posCapaX == posx && posCapaY == posy) ||
+            estaNaJaula(posCapaX, posCapaY));
 
-      frutaAtiva = true;
-      somFrutaAparece.play(); // Toca o som quando a fruta aparece
+      capaAtiva = true; // ativa capa no mapa
+      somCapaAparece.play(); // Toca o som quando a capa aparece
+      pontuacaoTotal += 75; // Adiciona 75 pontos por coletar a fruta
       }
 
-   // Verifica colisão com a fruta
-   if(frutaAtiva && posx == posFrutaX && posy == posFrutaY) {
-      frutaAtiva = false;
-      invulneravel = true;
-      clockInvulneravel.restart();
-      clockFruta.restart();
-      somFruta.play();
+   // Verifica colisão com a capa
+   if(capaAtiva && posx == posCapaX && posy == posCapaY) {
+      capaAtiva = false; // remove capa do mapa
+      invulneravel = true; // ativa efeito invulneravel
+      clockInvulneravel.restart(); // reinicia relogio da invulnerabilidade
+      clockCapa.restart(); // reinicia relogio de aparecimento de capas
+      somCapa.play(); // toca som ao pegar a capa
+      pontuacaoTotal += 100; // Adiciona 100 pontos por coletar a vassoura
       }
 
    //Verifica o tempo de invulnerabilidade
    if(invulneravel && clockInvulneravel.getElapsedTime().asSeconds() > tempoInvulneravel) {
-      invulneravel = false;
+      invulneravel = false; // desativa invulnerabilidade
    }
 
 
    // Aparecimento da vassoura
+   // verifica se pode aparecer nova vassoura
+   // o jogo deve estar em andamento nao, finalizado e sem vassoura ativa e o tempo do relogio deve ser maior que o intervalo entre vassouras
    if (atual == ANDAMENTO && !jogoFinalizado && !vassouraAtiva && 
       clockVassoura.getElapsedTime().asSeconds() > tempoEntreVassouras) {
    // Encontra uma posição aleatória válida para a vassoura
@@ -845,20 +861,21 @@ if (invulneravel) {
         posVassouraX = rand() % 28;
         posVassouraY = rand() % 31;
       } 
+      // repete enquanto: posicao nao for caminho livre (0), ou for mesma posicao do harry ou  ainda se estiver dentro da jaula 
       while (mapa[posVassouraY][posVassouraX] != '0' || 
             (posVassouraX == posx && posVassouraY == posy) ||
             estaNaJaula(posVassouraX, posVassouraY)); //Evita aparecer na jaula
     
-    vassouraAtiva = true;
+    vassouraAtiva = true; // faz a vassoura aparecer no mapa
     somVassouraAparece.play(); // Toca o som quando a vassoura aparece
 }
 
    // Verifica colisão com a vassoura
    if (vassouraAtiva && posx == posVassouraX && posy == posVassouraY) {
-    vassouraAtiva = false;
-    velocidadeAumentada = true;
-    clockVelocidade.restart();
-    clockVassoura.restart();
+    vassouraAtiva = false; // remove vassoura do mapa
+    velocidadeAumentada = true; // ativa efeito de velocidade
+    clockVelocidade.restart();  // reinicia o relogio da velocidade
+    clockVassoura.restart(); // reinicia o relogio de aparecimento de vassouras
     somVassoura.play(); // Toca o som ao pegar a vassoura
 }
 
@@ -874,8 +891,8 @@ if (invulneravel) {
    // Formata o horário do tipo [1:01], se o segundo for menor que 10, adiciona um 0, para mander o formato
    temporizador.setString("Tempo: " + std::to_string(minutos) + ":" + (segundos < 10 ? "0" : "") + std::to_string(segundos));
    // Define o valor de pílulas comidas
-   pontuacao.setString("Numero de Pedras Filosofais encontradas: " + std::to_string(contadorPedra));
-   // Mensagem de fim de jogo
+   pontuacao.setString("Pedras: " + std::to_string(contadorPedra) + 
+                   "    |    Pontos: " + std::to_string(pontuacaoTotal));
    endGame.setString("Patronus! Pedras coletadas! Hogwarts agradece, bravo(a) bruxo(a).");
    // Mensagem de redução de vida
    reduzirVida.setString("Voce sentiu um frio na espinha... Um Dementador te alcancou!");
@@ -904,11 +921,11 @@ if (invulneravel) {
             }
 
          
-        //Desenha a Fruta
-        if(frutaAtiva) {
-         frutaInvulneravel.setPosition(posFrutaX * SIZE + SIZE / 2.0f, 
-                                 posFrutaY * SIZE + SIZE / 2.0f);
-         window.draw(frutaInvulneravel);
+        //Desenha a Capa
+        if(capaAtiva) {
+         capaInvulneravel.setPosition(posCapaX * SIZE + SIZE / 2.0f, 
+                                 posCapaY * SIZE + SIZE / 2.0f);
+         window.draw(capaInvulneravel);
       }
 
          //faz o harry piscar
@@ -921,7 +938,7 @@ if (invulneravel) {
          pac.setColor(sf::Color(255, 255, 255, alpha));  // Branco com transparência variável
          } 
          else {
-         pac.setColor(sf::Color::White);  // Volta ao normal (totalmente opaco)
+         pac.setColor(sf::Color::White);  // Volta ao normal (totalmente visivel)
          }
          window.draw(pac);
 
@@ -1437,14 +1454,23 @@ void reiniciarJogo(){
                      semVida = false;
                      perdeuVida = false;
 
+                      // Reseta a pontuação
+                     pontuacaoTotal = 0;
+
                      // Situação para reiniciar o jogo
                      aguardaReinicio = false;
 
-                     //resetar frutas
+                     //resetar capas
                      invulneravel = false;
-                     frutaAtiva = false;
-                     clockFruta.restart();
+                     capaAtiva = false;
+                     clockCapa.restart();
                      clockInvulneravel.restart();
+
+                     //resetar vassouras
+                     velocidadeAumentada = false;
+                     vassouraAtiva = false;
+                     clockVassoura.restart();
+                     clockVelocidade.restart();
                      // Situação da música de fundo
                      music.stop();
                      music.play();
