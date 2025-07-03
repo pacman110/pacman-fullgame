@@ -902,8 +902,11 @@ if (invulneravel) {
    mensagemInicial.setString("Pressione ENTER para iniciar sua jornada em Hogwarts!");
    // Mensagem Final do Jogo
    mensagemFinal.setString("Pressione ENTER para jogar novamente.");
+
    // limpa a janela com a cor preta
     window.clear(sf::Color::Black);
+
+    // ============== IMPRESSOÕES =====================
     // desenha o fundo da tela (imagem única)
     window.draw(spriteFundo);
         // desenha paredes
@@ -954,17 +957,18 @@ if (invulneravel) {
         ghost2.setPosition(ghost2X * SIZE + SIZE / 2.0f, ghost2Y * SIZE + SIZE / 2.0f);
         ghost3.setPosition(ghost3X * SIZE + SIZE / 2.0f, ghost3Y * SIZE + SIZE / 2.0f);
         ghost4.setPosition(ghost4X * SIZE + SIZE / 2.0f, ghost4Y * SIZE + SIZE / 2.0f);
-
-         window.draw(pac);
-
          window.draw(ghost1);
          window.draw(ghost2);
          window.draw(ghost3);
          window.draw(ghost4);
-         if(atual == ANDAMENTO && !semVida){ // Se estiver rodando o jogo e tiver vida
+
+      //Desenha o Pac-man
+      window.draw(pac);
+         
+      if(atual == ANDAMENTO && !semVida){ // Se estiver rodando o jogo e tiver vida
             for (int i = 0; i < vidas; ++i) {
                vida.setPosition(35 + i * 40, 1050); // espaçamento horizontal
-               window.draw(vida);
+               window.draw(vida); // Imprime os sprites de vida
             }
       }
 
@@ -979,9 +983,9 @@ if (invulneravel) {
                   }
                }
                else{
-                  window.draw(endGame);
+                  window.draw(endGame); // Imprime o texto fim de jogo por coletar os pontos
                   if(!musicaFinalPlay){
-                     music.stop();
+                     music.stop(); // Parar o a musica principal do jogo
                      musicEndGame.setVolume(100);    // Volume de 0 a 100 (pode ajustar para menos se estiver muito alto)
                      musicEndGame.play();         // Começa a tocar
                      musicaFinalPlay = true;
@@ -992,17 +996,19 @@ if (invulneravel) {
             window.draw(reduzirVida); // Imprime a mensgaem de diminuir vida
          }
          else if (atual == ANDAMENTO){ 
-            window.draw(pontuacao);
-            window.draw(temporizador);
+            window.draw(pontuacao); // Imprime a pontuação
+            window.draw(temporizador); // Imprime temporizador
          }
          if (perdeuVida && clockTextoPerdeuVida.getElapsedTime().asSeconds() > 3.0f) {
             perdeuVida = false; // Desativa a impressao da mensagem
          }
+
          if (atual == INICIO) 
-               window.draw(mensagemInicial);
+               window.draw(mensagemInicial); // Mostra o texto de pressionar enter no inicio do jogo 
          else if (jogoFinalizado) 
-               window.draw(mensagemFinal);
-      
+               window.draw(mensagemFinal);// Mostra o texto de pressionar enter no fim do jogo para jogar novamente
+         // ====================================================
+
          // termina e desenha o frame corrente
          window.display();
          
@@ -1010,10 +1016,18 @@ if (invulneravel) {
       return 0;
 }
 bool colisaoHarry(double ghostX, double ghostY, int posx, int posy, double tolerancia){
+    // Se o Harry estiver invulnerável, não há colisão
       if(invulneravel){
          return false;
       }
-      if((ghostX >= posx - tolerancia && ghostX <= posx + tolerancia) &&
+      // Verifica se a posição do ghost está "próxima o suficiente" da posição do Harry
+      // Se o ghost estiver entre o intervalo da posição (posx - tolerancia) e (posx + tolerancia) no eixo x
+      // e o no eixo y. Então, o ghost está dentro da área ao redor do Harry, haverá colisão.
+      // Essa verificação é necessária porque a posição do ghost é do tipo double,
+      // enquanto a posição de Harry é do tipo int. Sem a tolerância, pequenas diferenças numéricas
+      // impediriam a detecção da colisão, mesmo que visualmente os dois estivessem colidindo.
+      
+      if((ghostX >= posx - tolerancia && ghostX <= posx + tolerancia) && 
          (ghostY >= posy - tolerancia && ghostY <= posy + tolerancia))
             return true;
       else
