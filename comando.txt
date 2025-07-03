@@ -1,0 +1,7 @@
+Para executar, use algum dos seguintes comandos para compilar o jogo: 
+
+g++ main.cpp -o PacWizard.exe -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
+
+g++ main.cpp -o PacWizard -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
+
+g++ main.cpp -o PacWizard.out -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
