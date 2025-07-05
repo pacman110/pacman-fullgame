@@ -163,35 +163,10 @@ void defineGhost(
     sf::Sprite &ghost2, sf::Sprite &ghost2_left, sf::Sprite &ghost2_up, sf::Sprite &ghost2_down, sf::Sprite &ghost2_right,
     sf::Sprite &ghost3, sf::Sprite &ghost3_left, sf::Sprite &ghost3_up, sf::Sprite &ghost3_down, sf::Sprite &ghost3_right,
     sf::Sprite &ghost4, sf::Sprite &ghost4_left, sf::Sprite &ghost4_up, sf::Sprite &ghost4_down, sf::Sprite &ghost4_right);
-
-
-
-
-
-
 // Funcao para configurar o sprite da capa de invisibilidade
-void defineCapa(sf::Sprite &capa) {
-    static sf::Texture texturaCapa;
-    if (!texturaCapa.loadFromFile("resources/capa.png")) {
-        std::cout << "Erro lendo imagem capa.png\n";
-    }
-    sf::Vector2u tamanhoTextura = texturaCapa.getSize();
-    capa.setTexture(texturaCapa);
-    capa.setOrigin(tamanhoTextura.x / 2.0f, tamanhoTextura.y / 2.0f);
-    capa.setScale(0.7f, 0.7f);
-}
-
+void defineCapa(sf::Sprite &capa);
 // Funcao para configurar o sprite da vassoura
-void defineVassoura(sf::Sprite &vassouraSprite) {
-    static sf::Texture texturaVassoura;
-    if (!texturaVassoura.loadFromFile("resources/vassoura.png")) {
-        std::cout << "Erro lendo imagem vassoura.png\n";
-    }
-    vassouraSprite.setTexture(texturaVassoura);
-    vassouraSprite.setOrigin(texturaVassoura.getSize().x / 2.0f, texturaVassoura.getSize().y / 2.0f);
-    vassouraSprite.setScale(0.7f, 0.7f);
-}
-
+void defineVassoura(sf::Sprite &vassouraSprite);
 
 
 
@@ -1494,4 +1469,24 @@ void reiniciarJogo(){
 
                      // Muda para situação de andamento
                      atual = ANDAMENTO;
+}
+void defineCapa(sf::Sprite &capa) {
+    static sf::Texture texturaCapa;
+    if (!texturaCapa.loadFromFile("resources/capa.png")) {
+        std::cout << "Erro lendo imagem capa.png\n";
+    }
+    sf::Vector2u tamanhoTextura = texturaCapa.getSize();
+    capa.setTexture(texturaCapa);
+    capa.setOrigin(tamanhoTextura.x / 2.0f, tamanhoTextura.y / 2.0f);
+    capa.setScale(0.7f, 0.7f);
+}
+// Funcao para configurar o sprite da vassoura
+void defineVassoura(sf::Sprite &vassouraSprite) {
+    static sf::Texture texturaVassoura;
+    if (!texturaVassoura.loadFromFile("resources/vassoura.png")) {
+        std::cout << "Erro lendo imagem vassoura.png\n";
+    }
+    vassouraSprite.setTexture(texturaVassoura);
+    vassouraSprite.setOrigin(texturaVassoura.getSize().x / 2.0f, texturaVassoura.getSize().y / 2.0f);
+    vassouraSprite.setScale(0.7f, 0.7f);
 }
