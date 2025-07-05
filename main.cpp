@@ -249,8 +249,12 @@ int main() {
    // Copia o mapa do original para usar quando reiniciar o mapa
    copiarMapa(copiaMapa, mapa); 
 
-   sf::RenderWindow window(sf::VideoMode(980, 1085), "Pac-Wizard: A cacada em Hogwarts");
-         
+   //sf::RenderWindow window(sf::VideoMode(980, 1085), "Pac-Wizard: A cacada em Hogwarts");
+   
+   // NEW ARCADE
+      sf::RenderWindow window(sf::VideoMode(980, 1085), "Pac-Wizard: A cacada em Hogwarts", sf::Style::Fullscreen);
+      sf::View view(sf::FloatRect(0.f, 0.f, 980.f, 1085.f));
+      window.setView(view);
          
    // shape da parede
    sf::RectangleShape rectangle(sf::Vector2f(SIZE, SIZE));
