@@ -402,6 +402,10 @@ if (!bufferVassouraAparece.loadFromFile("resources/sounds/hp_vassoura_aparece.og
    sf::Clock clockTextoPerdeuVida; //temporizador para deixar pouco tempo na tela a mensgaem de perdeu vida
 
     while (window.isOpen()) {
+               float eixoXJoystick0 = sf::Joystick::getAxisPosition(0, sf::Joystick::X);
+               float eixoYJoystick0 = sf::Joystick::getAxisPosition(0, sf::Joystick::Y);
+               bool botao0Pressionado = sf::Joystick::isButtonPressed(0, 0);
+               bool botao1Pressionado = sf::Joystick::isButtonPressed(0, 1);
 
         // verifica todos os eventos que foram acionados na janela desde a última iteração do loop
         sf::Event event;
@@ -412,7 +416,7 @@ if (!bufferVassouraAparece.loadFromFile("resources/sounds/hp_vassoura_aparece.og
                 window.close();
    
             // Se o botão for pressionado e for enter, jogo inicia novamente, caso esteja na situação de finalizado ou inicio, para andamento
-            if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Enter){
+            if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Enter || (event.type == sf::Event::JoystickButtonPressed && event.joystickButton.button == 0)){
                if (atual == INICIO) { // Se a situação do jogo for inicio, muda para andamento e reinicia o relogio do jogo
                   atual = ANDAMENTO;
                   gameClock.restart();
@@ -436,6 +440,19 @@ if (!bufferVassouraAparece.loadFromFile("resources/sounds/hp_vassoura_aparece.og
                   proximaDirecao   = BAIXO;
                }
             }
+
+            if (atual == ANDAMENTO && !jogoFinalizado) {
+              if (event.type == sf::Event::JoystickMoved) {
+               if (eixoXJoystick0 < -50)  
+                  proximaDirecao = ESQUERDA; 
+               else if (eixoXJoystick0 > 50) 
+                  proximaDirecao = DIREITA;
+               if (eixoYJoystick0 < -50) 
+                  proximaDirecao = CIMA;
+                else if (eixoYJoystick0 > 50) 
+                  proximaDirecao = BAIXO;
+}
+          }
         }
 
       // a cada 0.2 segundos, atualiza a posicao automaticamente do pacman//
